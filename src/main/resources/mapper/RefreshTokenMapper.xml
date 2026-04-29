@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playball.security.mapper.RefreshTokenMapper">
+
+    <resultMap id="tokenResultMap" type="com.playball.security.dto.RefreshTokenDTO">
+        <id property="tokenId" column="token_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="token" column="token"/>
+        <result property="expiryDate" column="expiry_date"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insertToken" parameterType="com.playball.security.dto.RefreshTokenDTO">
+        INSERT INTO refresh_token (member_id, token, expiry_date)
+        VALUES (#{memberId}, #{token}, #{expiryDate})
+    </insert>
+
+    <select id="findByToken" resultMap="tokenResultMap">
+        SELECT * FROM refresh_token WHERE token = #{token}
+    </select>
+
+    <delete id="deleteByMemberId">
+        DELETE FROM refresh_token WHERE member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteByToken">
+        DELETE FROM refresh_token WHERE token = #{token}
+    </delete>
+
+</mapper>

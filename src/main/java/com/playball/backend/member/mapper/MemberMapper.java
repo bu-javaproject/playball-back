@@ -45,4 +45,6 @@ public interface MemberMapper {
     void deleteFavoriteSport(@Param("memberId") Long memberId);
 
     List<String> findFavoriteSports(@Param("memberId") Long memberId);
+
+    void deleteFavoriteSports(Long memberId);
 }

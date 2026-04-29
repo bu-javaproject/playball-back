@@ -11,7 +11,9 @@ import lombok.Setter;
 public class KakaoLoginRequest {
 
     @NotBlank(message = "인가코드는 필수입니다")
-    private String authrizationCode;
+    private String authorizationCode;
 
     private String redirectUri;
+
+
 }
