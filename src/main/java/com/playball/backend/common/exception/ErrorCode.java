@@ -31,6 +31,8 @@ public enum ErrorCode {
     MATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 경기입니다."),
     MATCH_FULL(HttpStatus.CONFLICT, "경기 인원이 꽉 찼습니다."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참가한 경기입니다."),
+    MATCH_DELETED(HttpStatus.CONFLICT, "이미 삭제된 경기입니다."),
+
 
     // 채팅
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방입니다.");
