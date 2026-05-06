@@ -1408,21 +1408,36 @@ paths:
   /api/notifications:
     get:
       tags: [알림]
-      summary: 알림 목록 조회
+      summary: 내 알림 목록 조회 (Cursor 페이지네이션)
       description: |
-        **와이어프레임: 프로필 → 알림 설정 (배지 3)**
-        읽지 않은 알림 수 + 알림 목록을 반환합니다.
+        무한 스크롤 형태. 첫 호출은 cursor 생략, 응답의 `nextCursor`를 다음 호출에 전달.
+        `nextCursor`가 null이면 더 이상 데이터 없음.
+
+        **알림 타입 (notice_type):**
+        - `MATCH_FOUND`: 랜덤 매칭 성사 / 신청 수락
+        - `APPLICATION_REJECTED`: 신청 거절
+        - `MATCH_REMINDER`: 경기 시작 1시간 전 리마인더
+        - `MATCH_CANCELLED`: 경기 취소
+        - `RATING_REQUEST`: 경기 종료 → 칭찬 요청
+        - `SYSTEM_NOTICE`: 시스템 공지
       parameters:
-        - name: page
+        - name: cursor
           in: query
+          description: 이전 응답의 nextCursor 값. 첫 호출은 생략
           schema:
             type: integer
-            default: 0
+            format: int64
         - name: size
           in: query
           schema:
             type: integer
             default: 20
+        - name: onlyUnread
+          in: query
+          description: true면 안 읽은 알림만 조회
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: 조회 성공
@@ -1434,23 +1449,24 @@ paths:
                 success: true
                 message: "성공"
                 data:
-                  unreadCount: 3
-                  notifications:
-                    - notificationId: 10
-                      type: "PARTICIPANT_REQUEST"
-                      title: "참가 신청"
-                      body: "박영수님이 '백석대 축구'에 참가 신청했습니다"
-                      matchId: 1
+                  items:
+                    - notificationId: 145
+                      noticeType: "MATCH_FOUND"
+                      title: "매칭 성사!"
+                      content: "백석대 컴공 내기 매칭이 성사되었습니다."
                       isRead: false
-                      createdAt: "2026-04-26T18:00:00"
-                    - notificationId: 9
-                      type: "MATCH_REMINDER"
+                      targetType: "MATCH"
+                      targetId: 12
+                      createdAt: "2026-05-04T19:00:00"
+                    - notificationId: 144
+                      noticeType: "MATCH_REMINDER"
                       title: "경기 임박"
-                      body: "내일 오후 7시 '백석대 축구' 경기가 있습니다"
-                      matchId: 1
+                      content: "내일 오후 7시 '백석대 축구' 경기가 있습니다"
                       isRead: false
-                      createdAt: "2026-04-26T17:00:00"
-                  hasNext: true
+                      targetType: "MATCH"
+                      targetId: 1
+                      createdAt: "2026-05-04T17:00:00"
+                  nextCursor: 144
 
   /api/notifications/{notificationId}/read:
     patch:
@@ -1507,34 +1523,25 @@ paths:
                 success: true
                 message: "성공"
                 data:
-                  matchNotification: true
-                  chatNotification: true
-                  friendNotification: true
-                  marketingNotification: false
+                  enabled: true
+                  updatedAt: "2026-05-04T18:30:00"
 
-    put:
+    patch:
       tags: [알림]
-      summary: 알림 설정 변경
+      summary: 알림 ON/OFF 토글
+      description: 전체 알림 수신을 켜거나 끕니다.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [enabled]
               properties:
-                matchNotification:
-                  type: boolean
-                chatNotification:
-                  type: boolean
-                friendNotification:
-                  type: boolean
-                marketingNotification:
+                enabled:
                   type: boolean
             example:
-              matchNotification: true
-              chatNotification: true
-              friendNotification: true
-              marketingNotification: false
+              enabled: false
       responses:
         '200':
           description: 설정 변경 완료
@@ -1545,256 +1552,50 @@ paths:
               example:
                 success: true
                 message: "알림 설정이 변경되었습니다"
-                data: null
+                data:
+                  enabled: false
+                  updatedAt: "2026-05-04T19:01:00"
 
-  # ──────────────────────────────────────────────
-  # 평가
-  # ──────────────────────────────────────────────
-
-  /api/matches/{matchId}/rating:
+  /api/devices/token:
     post:
-      tags: [평가]
-      summary: 경기 별점 평가
+      tags: [ 알림 ]
+      summary: FCM 푸시 토큰 등록/갱신
       description: |
-        **와이어프레임: 내 경기 → 별점(★★★★★)**
-        완료된 경기에 별점을 부여합니다. 1~5점.
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+        모바일 앱이 FCM에서 발급받은 푸시 토큰을 서버에 등록합니다.
+        앱 실행 시 매번 호출 (FCM 토큰은 앱 재설치 / 로그아웃 등으로 변경 가능).
+        같은 토큰이 이미 다른 사용자에게 등록돼 있으면 새 사용자로 갱신.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [score]
-              properties:
-                score:
-                  type: integer
-                  minimum: 1
-                  maximum: 5
-                  description: "별점 (1~5)"
-                comment:
-                  type: string
-                  description: "후기 (선택)"
+              $ref: '#/components/schemas/DeviceTokenRequest'
             example:
-              score: 4
-              comment: "분위기 좋았습니다"
-      responses:
-        '201':
-          description: 평가 완료
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "평가가 등록되었습니다"
-                data:
-                  ratingId: 1
-                  matchId: 1
-                  score: 4
-                  comment: "분위기 좋았습니다"
-        '400':
-          description: 아직 완료되지 않은 경기이거나 이미 평가함
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-    get:
-      tags: [평가]
-      summary: 경기 평가 조회
-      description: 해당 경기의 평균 별점과 후기 목록을 조회합니다.
-      security: []
-      parameters:
-        - name: matchId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+              token: "fGcm_long_token_string..."
+              platform: "ANDROID"
       responses:
         '200':
-          description: 조회 성공
+          description: 등록 성공
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
               example:
                 success: true
-                message: "성공"
-                data:
-                  matchId: 1
-                  averageScore: 4.2
-                  totalCount: 5
-                  ratings:
-                    - ratingId: 1
-                      memberId: 2
-                      nickname: "김철수"
-                      score: 4
-                      comment: "분위기 좋았습니다"
-                      createdAt: "2026-04-30T22:00:00"
-                    - ratingId: 2
-                      memberId: 3
-                      nickname: "박영희"
-                      score: 5
-                      comment: null
-                      createdAt: "2026-04-30T22:30:00"
-
-  # ──────────────────────────────────────────────
-  # 친구
-  # ──────────────────────────────────────────────
-
-  /api/friends:
-    get:
-      tags: [친구]
-      summary: 친구 목록 조회
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "성공"
-                data:
-                  totalCount: 3
-                  friends:
-                    - friendId: 1
-                      memberId: 2
-                      nickname: "김철수"
-                      profileImage: null
-                    - friendId: 2
-                      memberId: 3
-                      nickname: "이영희"
-                      profileImage: null
-
-    post:
-      tags: [친구]
-      summary: 친구 요청 보내기
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [receiverId]
-              properties:
-                receiverId:
-                  type: integer
-                  format: int64
-            example:
-              receiverId: 5
-      responses:
-        '201':
-          description: 친구 요청 완료
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "친구 요청을 보냈습니다"
-                data:
-                  friendId: 10
-                  status: "PENDING"
-
-  /api/friends/requests:
-    get:
-      tags: [친구]
-      summary: 받은 친구 요청 목록
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "성공"
-                data:
-                  - friendId: 11
-                    requesterId: 7
-                    nickname: "최민수"
-                    profileImage: null
-                    createdAt: "2026-04-26T16:00:00"
-
-  /api/friends/{friendId}/accept:
-    patch:
-      tags: [친구]
-      summary: 친구 요청 수락
-      parameters:
-        - name: friendId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: 수락 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "친구 요청을 수락했습니다"
+                message: "기기 토큰이 등록되었습니다"
                 data: null
 
-  /api/friends/{friendId}/reject:
-    patch:
-      tags: [친구]
-      summary: 친구 요청 거절
-      parameters:
-        - name: friendId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: 거절 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "친구 요청을 거절했습니다"
-                data: null
-
-  /api/friends/{friendId}:
     delete:
-      tags: [친구]
-      summary: 친구 삭제
+      tags: [ 알림 ]
+      summary: FCM 푸시 토큰 삭제
+      description: |
+        로그아웃 시 호출. 안 호출하면 다음 사용자의 푸시가 이 기기로 갈 수 있음.
       parameters:
-        - name: friendId
-          in: path
+        - name: token
+          in: query
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
       responses:
         '200':
           description: 삭제 성공
@@ -1804,101 +1605,41 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
               example:
                 success: true
-                message: "친구가 삭제되었습니다"
+                message: "기기 토큰이 삭제되었습니다"
                 data: null
 
+
+
   # ──────────────────────────────────────────────
-  # 채팅 (REST 폴백 — 실시간은 WebSocket)
+  # 칭찬
   # ──────────────────────────────────────────────
 
-  /api/chat/rooms:
-    get:
-      tags: [채팅]
-      summary: 내 채팅방 목록
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "성공"
-                data:
-                  - roomId: 1
-                    roomName: "백석대 축구 내기"
-                    roomType: "MATCH"
-                    matchId: 1
-                    memberCount: 7
-                    lastMessage: "내일 7시에 봐요!"
-                    lastMessageAt: "2026-04-26T18:00:00"
-                  - roomId: 2
-                    roomName: "김철수"
-                    roomType: "PRIVATE"
-                    matchId: null
-                    memberCount: 2
-                    lastMessage: "다음에 같이 뛰자"
-                    lastMessageAt: "2026-04-26T17:30:00"
-
-  /api/chat/rooms/{roomId}/messages:
-    get:
-      tags: [채팅]
-      summary: 메시지 히스토리 조회
-      description: 채팅방 입장 시 이전 메시지를 불러옵니다. 최신순 역순.
-      parameters:
-        - name: roomId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: before
-          in: query
-          description: 이 메시지 ID 이전 조회 (무한 스크롤)
-          schema:
-            type: integer
-            format: int64
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 50
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "성공"
-                data:
-                  hasMore: true
-                  messages:
-                    - messageId: 100
-                      senderId: 1
-                      senderNickname: "홍길동"
-                      senderProfileImage: null
-                      content: "내일 7시에 봐요!"
-                      messageType: "TEXT"
-                      sentAt: "2026-04-26T18:00:00"
-                    - messageId: 99
-                      senderId: 2
-                      senderNickname: "김철수"
-                      senderProfileImage: null
-                      content: "네 알겠습니다!"
-                      messageType: "TEXT"
-                      sentAt: "2026-04-26T17:58:00"
-
-  /api/chat/rooms/{roomId}/messages/send:
+  /api/matches/{matchId}/compliments:
     post:
-      tags: [채팅]
-      summary: 메시지 전송 (REST 폴백)
-      description: WebSocket 연결 불가 시 REST로 메시지를 전송합니다.
+      tags: [칭찬]
+      summary: 경기 후 같이 뛴 사람 칭찬 (Bulk)
+      description: |
+        경기 종료 후 같이 뛴 참가자들을 한 번에 칭찬합니다.
+        
+        **칭찬 태그 (multi-select):**
+        - `MANNERS`: 매너 좋아요
+        - `SKILL`: 실력 좋아요
+        - `PUNCTUAL`: 시간 약속 잘 지켜요
+        - `PASSIONATE`: 열정적이에요
+        - `MOOD_MAKER`: 분위기 메이커
+        
+        **검증 규칙:**
+        - 매치 상태가 `CLOSED` 여야 함 (진행 전 평가 불가)
+        - 매치 종료 후 7일 이내만 가능
+        - 호출자(rater)와 각 ratee 모두 그 매치에 참여했어야 함
+        - 자기 자신 평가 불가 (rateeId ≠ raterId)
+        - 같은 batch에서 같은 rateeId 중복 불가
+        - 각 칭찬당 tag 1~5개 (중복 X)
+        - 이미 그 사람을 그 경기에서 칭찬했으면 거부
+        
+        **트랜잭션:** 1명이라도 검증 실패 시 전체 롤백.
       parameters:
-        - name: roomId
+        - name: matchId
           in: path
           required: true
           schema:
@@ -1909,33 +1650,194 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [content]
-              properties:
-                content:
-                  type: string
-                messageType:
-                  type: string
-                  enum: [TEXT, IMAGE]
-                  default: "TEXT"
+              $ref: '#/components/schemas/ComplimentBulkRequest'
             example:
-              content: "안녕하세요!"
-              messageType: "TEXT"
+              compliments:
+                - rateeId: 5
+                  tags: [ "MANNERS", "PUNCTUAL" ]
+                  comment: "오늘 정말 즐거웠습니다"
+                - rateeId: 7
+                  tags: [ "SKILL" ]
+                  comment: null
       responses:
         '201':
-          description: 전송 성공
+          description: 칭찬 등록 완료
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
               example:
                 success: true
-                message: "전송 성공"
+                message: "2명에게 칭찬을 보냈습니다"
                 data:
-                  messageId: 101
-                  content: "안녕하세요!"
-                  messageType: "TEXT"
-                  sentAt: "2026-04-26T18:05:00"
+                  created: 2
+        '400':
+          description: 검증 실패 (경기 미종료 / 7일 경과 / 비참가자 / 중복 등)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notClosed:
+                  summary: 매치가 아직 종료되지 않음
+                  value:
+                    success: false
+                    message: "경기 종료 후 칭찬할 수 있습니다"
+                    data: null
+                expired:
+                  summary: 7일 경과
+                  value:
+                    success: false
+                    message: "칭찬 가능 기간(7일)이 지났습니다"
+                    data: null
+                notParticipant:
+                  summary: 참가자 아님
+                  value:
+                    success: false
+                    message: "해당 경기 참가자만 칭찬할 수 있습니다"
+                    data: null
+                duplicate:
+                  summary: 이미 칭찬함
+                  value:
+                    success: false
+                    message: "이미 칭찬한 참가자가 포함되어 있습니다"
+                    data: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/members/{memberId}/compliments:
+    get:
+      tags: [ 칭찬 ]
+      summary: 받은 칭찬 목록 조회 (Cursor 페이지네이션)
+      description: |
+        **와이어프레임: 다른 유저 프로필 → 받은 칭찬**
+        
+        특정 회원이 받은 칭찬을 최신순으로 조회.
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "성공"
+                data:
+                  items:
+                    - complimentId: 88
+                      matchId: 12
+                      matchTitle: "백석대 축구 내기"
+                      raterNickname: "홍길동"
+                      tags: [ "MANNERS", "PUNCTUAL" ]
+                      comment: "오늘 정말 즐거웠습니다"
+                      createdAt: "2026-05-04T19:30:00"
+                    - complimentId: 87
+                      matchId: 10
+                      matchTitle: "농구 3:3"
+                      raterNickname: "김철수"
+                      tags: [ "SKILL" ]
+                      comment: null
+                      createdAt: "2026-05-03T20:15:00"
+                  nextCursor: 87
+
+  /api/members/{memberId}/compliments/summary:
+    get:
+      tags: [ 칭찬 ]
+      summary: 받은 칭찬 누적 카운트 (프로필용)
+      description: |
+        **와이어프레임: 프로필 화면 → 칭찬 배지**
+        
+        회원이 받은 칭찬을 태그별로 집계. `member_compliment_summary` 테이블에서 1회 조회.
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "성공"
+                data:
+                  totalCount: 35
+                  tags:
+                    - tag: "MANNERS"
+                      count: 12
+                    - tag: "SKILL"
+                      count: 8
+                    - tag: "PUNCTUAL"
+                      count: 7
+                    - tag: "PASSIONATE"
+                      count: 5
+                    - tag: "MOOD_MAKER"
+                      count: 3
+
+  /api/matches/{matchId}/compliments/me:
+    get:
+      tags: [ 칭찬 ]
+      summary: 이 경기에서 내가 한/받은 칭찬 조회
+      description: |
+        **와이어프레임: 경기 종료 후 칭찬 화면**
+        
+        경기 단위로 본인이 평가한 사람들 + 평가받은 사람들을 한 번에 조회.
+        - `given`: 내가 다른 참가자에게 한 칭찬
+        - `received`: 다른 참가자가 나에게 한 칭찬
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "성공"
+                data:
+                  given:
+                    - complimentId: 88
+                      rateeId: 5
+                      rateeNickname: "박영희"
+                      tags: [ "MANNERS" ]
+                      comment: "재밌었어요"
+                      createdAt: "2026-05-04T19:30:00"
+                  received:
+                    - complimentId: 90
+                      raterNickname: "김철수"
+                      tags: [ "SKILL", "PASSIONATE" ]
+                      comment: null
+                      createdAt: "2026-05-04T19:35:00"
 
 # ============================================================
 # Components
@@ -2094,6 +1996,52 @@ components:
         description:
           type: string
           description: "공지 메시지"
+
+    DeviceTokenRequest:
+      type: object
+      required: [ token, platform ]
+      properties:
+        token:
+          type: string
+          description: FCM에서 발급받은 푸시 토큰
+        platform:
+          type: string
+          enum: [ ANDROID, IOS, WEB ]
+          description: 기기 플랫폼
+
+    ComplimentSubmitItem:
+      type: object
+      required: [ rateeId, tags ]
+      properties:
+        rateeId:
+          type: integer
+          format: int64
+          description: 칭찬할 대상 회원 ID
+        tags:
+          type: array
+          minItems: 1
+          maxItems: 5
+          uniqueItems: true
+          items:
+            type: string
+            enum: [ MANNERS, SKILL, PUNCTUAL, PASSIONATE, MOOD_MAKER ]
+          description: 칭찬 태그 (1~5개, 중복 X)
+        comment:
+          type: string
+          maxLength: 200
+          nullable: true
+          description: 한마디 코멘트 (선택)
+
+    ComplimentBulkRequest:
+      type: object
+      required: [ compliments ]
+      properties:
+        compliments:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ComplimentSubmitItem'
+          description: 한 경기에서 여러 명 동시 칭찬
 
     RandomMatchRequest:
       type: object
