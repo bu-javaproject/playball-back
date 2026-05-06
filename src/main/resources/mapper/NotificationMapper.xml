@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playball.backend.notification.mapper.NotificationMapper">
+
+    <!-- ==================== INSERT ==================== -->
+    <insert id="insertNotification"
+            parameterType="com.playball.backend.notification.dto.NotificationDTO"
+            useGeneratedKeys="true"
+            keyProperty="notificationId">
+        INSERT INTO notification (
+        member_id,
+        notice_type,
+        title,
+        content,
+        target_type,
+        target_id
+        ) VALUES (
+        #{memberId},
+        #{noticeType},
+        #{title},
+        #{content},
+        #{targetType},
+        #{targetId}
+        )
+    </insert>
+
+
+    <!-- ==================== 단건 조회 ==================== -->
+    <select id="findById"
+            resultType="com.playball.backend.notification.dto.NotificationDTO">
+        SELECT
+        notification_id,
+        member_id,
+        notice_type,
+        title,
+        content,
+        is_read,
+        target_type,
+        target_id,
+        created_at
+        FROM notification
+        WHERE notification_id = #{notificationId}
+    </select>
+
+
+    <!-- ==================== Cursor 페이지네이션 ==================== -->
+    <select id="findByMember"
+            resultType="com.playball.backend.notification.dto.NotificationDTO">
+        SELECT
+        notification_id,
+        member_id,
+        notice_type,
+        title,
+        content,
+        is_read,
+        target_type,
+        target_id,
+        created_at
+        FROM notification
+        WHERE member_id = #{memberId}
+        <if test="cursor != null">
+            AND notification_id &lt; #{cursor}
+        </if>
+        <if test="onlyUnread">
+            AND is_read = 0
+        </if>
+        ORDER BY notification_id DESC
+        LIMIT #{size}
+    </select>
+
+
+    <!-- ==================== 안 읽은 카운트 ==================== -->
+    <select id="countUnreadByMember" resultType="int">
+        SELECT COUNT(*)
+        FROM notification
+        WHERE member_id = #{memberId}
+        AND is_read = 0
+    </select>
+
+
+    <!-- ==================== 읽음 처리 ==================== -->
+    <update id="markAsRead">
+        UPDATE notification
+        SET is_read = 1
+        WHERE notification_id = #{notificationId}
+        AND is_read = 0   <!-- 이미 읽은 거 또 UPDATE 안 함 (성능) -->
+    </update>
+
+    <update id="markAllAsReadByMember">
+        UPDATE notification
+        SET is_read = 1
+        WHERE member_id = #{memberId}
+        AND is_read = 0
+    </update>
+
+
+    <!-- ==================== 삭제 ==================== -->
+    <delete id="deleteById">
+        DELETE FROM notification
+        WHERE notification_id = #{notificationId}
+    </delete>
+
+</mapper>
