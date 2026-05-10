@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.playball.backend.common.dto.ApiResponse;
 import com.playball.backend.domain.matches.dto.MatchCreateRequest;
 import com.playball.backend.domain.matches.dto.MatchCreateResponse;
+import com.playball.backend.domain.matches.dto.MatchDetailResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
 import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
@@ -30,11 +31,27 @@ public class MatchController {
 
     private final MatchService matchService;
 
+    // 경기 상세 조회
+    @GetMapping("/{matchId}")
+    public ApiResponse<MatchDetailResponse> getMatch(
+            @PathVariable Long matchId) {
+        MatchDetailResponse response = matchService.getMatch(matchId);
+        return ApiResponse.ok("경기 조회 성공", response);
+    }
+
+    // 경기 목록 조회
+    @GetMapping
+    public ApiResponse<List<MatchResponse>> getMatches(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<MatchResponse> response = matchService.getMatches(page, size);
+        return ApiResponse.ok("경기 목록 조회 성공", response);
+    }
+
     // 경기 생성
     @PostMapping
     public ApiResponse<MatchCreateResponse> createMatch(
-            @Valid @RequestBody MatchCreateRequest request
-    ) {
+            @Valid @RequestBody MatchCreateRequest request) {
         MatchCreateResponse response = matchService.createMatch(request);
         return ApiResponse.ok("경기 생성 성공", response);
     }
@@ -43,31 +60,10 @@ public class MatchController {
     @PatchMapping("/{matchId}")
     public ApiResponse<MatchUpdateResponse> updateMatch(
             @PathVariable Long matchId,
-            @RequestBody MatchUpdateRequest request
-    ) {
+            @RequestBody MatchUpdateRequest request) {
         MatchUpdateResponse updatedMatch = matchService.updateMatch(matchId, request);
 
         return ApiResponse.ok("경기 수정 성공", updatedMatch);
-    }
-
-    // 경기 상세 조회
-    @GetMapping("/{matchId}")
-    public ApiResponse<MatchResponse> getMatch(
-            @PathVariable Long matchId
-    ) {
-        MatchResponse response = matchService.getMatch(matchId);
-        return ApiResponse.ok("경기 조회 성공", response);
-    }
-
-
-    // 경기 목록 조회
-    @GetMapping
-    public ApiResponse<List<MatchResponse>> getMatches(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        List<MatchResponse> response = matchService.getMatches(page, size);
-        return ApiResponse.ok("경기 목록 조회 성공", response);
     }
 
     // 경기 삭제
@@ -80,14 +76,10 @@ public class MatchController {
     // // 랜덤 매칭 요청
     // @PostMapping("/random")
     // public ApiResponse<RandomMatchResponse> getRandomMatch(
-    //         @Valid @RequestBody RandomMatchRequest request
+    // @Valid @RequestBody RandomMatchRequest request
     // ) {
-    //     RandomMatchResponse response = matchService.findRandomMatch(request);
-    //     return ApiResponse.ok("랜덤 매칭 성공", response);
+    // RandomMatchResponse response = matchService.findRandomMatch(request);
+    // return ApiResponse.ok("랜덤 매칭 성공", response);
     // }
-
-    
-
-    
 
 }

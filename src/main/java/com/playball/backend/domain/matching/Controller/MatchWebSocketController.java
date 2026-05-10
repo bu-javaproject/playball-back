@@ -10,7 +10,7 @@ import com.playball.backend.domain.matching.dto.MatchJoinRequest;
 import com.playball.backend.domain.matching.dto.MatchRealtimeResponse;
 import com.playball.backend.domain.matching.dto.MatchResponse;
 import com.playball.backend.domain.matching.service.MatchRealtimeService;
-import com.playball.backend.domain.matching.service.MatchService;
+import com.playball.backend.domain.matching.service.MatchingService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MatchWebSocketController {
 
-    private final MatchService matchService;
+    private final MatchingService matchingService;
     private final SimpMessagingTemplate messagingTemplate;
     private final MatchRealtimeService matchRealtimeService;
 
@@ -28,7 +28,7 @@ public class MatchWebSocketController {
             @DestinationVariable Long matchId,
             @Payload MatchJoinRequest request) {
 
-        MatchResponse response = matchService.joinMatch(matchId, request.getUserId());
+        MatchResponse response = matchingService.joinMatch(matchId, request.getUserId());
 
         // 실시간 브로드캐스트
         messagingTemplate.convertAndSend(

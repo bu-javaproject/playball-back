@@ -7,15 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.playball.backend.domain.matching.dto.MatchResponse;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
-import com.playball.backend.domain.matching.repository.MatchRepository;
+import com.playball.backend.domain.matching.repository.MatchingRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class MatchService {
+public class MatchingService {
 
-    private final MatchRepository matchRepository;
+    private final MatchingRepository matchRepository;
 
     @Transactional
     public MatchResponse joinMatch(Long matchId, Long userId) {

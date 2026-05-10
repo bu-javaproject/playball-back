@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.playball.backend.domain.matching.dto.MatchRealtimeResponse;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
-import com.playball.backend.domain.matching.repository.MatchRepository;
+import com.playball.backend.domain.matching.repository.MatchingRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MatchRealtimeService {
 
-    private final MatchRepository matchRepository;
+    private final MatchingRepository matchRepository;
 
     /**
      * 경기 참가
