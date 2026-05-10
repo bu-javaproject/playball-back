@@ -18,8 +18,6 @@ import com.playball.backend.domain.matches.dto.MatchCreateResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
 import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
-import com.playball.backend.domain.matches.dto.RandomMatchRequest;
-import com.playball.backend.domain.matches.dto.RandomMatchResponse;
 import com.playball.backend.domain.matches.service.MatchService;
 
 import jakarta.validation.Valid;
@@ -32,7 +30,7 @@ public class MatchController {
 
     private final MatchService matchService;
 
-    // 생성
+    // 경기 생성
     @PostMapping
     public ApiResponse<MatchCreateResponse> createMatch(
             @Valid @RequestBody MatchCreateRequest request
@@ -41,7 +39,7 @@ public class MatchController {
         return ApiResponse.ok("경기 생성 성공", response);
     }
 
-    // 수정
+    // 겅기 수정
     @PatchMapping("/{matchId}")
     public ApiResponse<MatchUpdateResponse> updateMatch(
             @PathVariable Long matchId,
@@ -50,15 +48,6 @@ public class MatchController {
         MatchUpdateResponse updatedMatch = matchService.updateMatch(matchId, request);
 
         return ApiResponse.ok("경기 수정 성공", updatedMatch);
-    }
-
-    // 랜덤 매칭 요청
-    @PostMapping("/random")
-    public ApiResponse<RandomMatchResponse> getRandomMatch(
-            @Valid @RequestBody RandomMatchRequest request
-    ) {
-        RandomMatchResponse response = matchService.findRandomMatch(request);
-        return ApiResponse.ok("랜덤 매칭 성공", response);
     }
 
     // 경기 상세 조회
@@ -81,11 +70,24 @@ public class MatchController {
         return ApiResponse.ok("경기 목록 조회 성공", response);
     }
 
-    // 매치 삭제
+    // 경기 삭제
     @DeleteMapping("/{matchId}")
     public ApiResponse<Void> deleteMatch(@PathVariable Long matchId) {
         matchService.deleteMatch(matchId);
         return ApiResponse.ok("경기가 삭제되었습니다", null);
     }
+
+    // // 랜덤 매칭 요청
+    // @PostMapping("/random")
+    // public ApiResponse<RandomMatchResponse> getRandomMatch(
+    //         @Valid @RequestBody RandomMatchRequest request
+    // ) {
+    //     RandomMatchResponse response = matchService.findRandomMatch(request);
+    //     return ApiResponse.ok("랜덤 매칭 성공", response);
+    // }
+
+    
+
+    
 
 }
