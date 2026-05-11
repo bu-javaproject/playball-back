@@ -1,66 +1,77 @@
 package com.playball.backend.domain.matches.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.springframework.data.annotation.Id;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import com.playball.backend.domain.matches.dto.MatchCreateRequest;
+
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "match")
+@EntityScan
+@Table(name = "matches")
 @Getter
-@NoArgsConstructorConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Match {
 
+    // 매치 ID PK
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long matchId;
+    private Long id;
 
-    // 🔗 host (Member)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "host_id", nullable = false)
-    private Member host;
-
-    @Column(nullable = false)
+    // 매치 제목
     private String title;
 
-    @Column(nullable = false)
-    private String sportType;
+    // 스포츠 종목
+    @Enumerated(EnumType.STRING)
+    private SportType sportType;
 
-    @Column(nullable = false)
-    private Integer maxPlayers;
-
-    @Column(nullable = false)
+    // 경기 날짜/시간
     private LocalDateTime matchDate;
 
-    @Column(nullable = false)
-    private Double latitude;
+    // 장소명
+    private String locationName;
 
-    @Column(nullable = false)
+    // 위도, 경도
+    private Double latitude;
     private Double longitude;
 
+    // 주소
     private String address;
 
-    @Column(nullable = false)
-    private String status = "OPEN";
+    // 최대 인원
+    private Integer maxPlayers;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private LocalDateTime deletedAt;
+    // 현재 인원(참여중인)
+    private Integer currentPlayers;
 
-    // 🔗 신청 목록
-    @OneToMany(mappedBy = "match")
-    private List<MatchApplication> applications = new ArrayList<>();
+    // 사용자 스킬 레벨
+    @Enumerated(EnumType.STRING)
+    private MatchCreateRequest.SkillLevel skillLevel;
+
+    // 참가비(0이면 무료)
+    private Integer entryFee;
+
+    // 공지 메시지(설명)
+    private String description;
+
+    // 상태
+    @Enumerated(EnumType.STRING)
+    private MatchStatus status; // OPEN, CLOSED, DELETED
+
+    // 수정일시
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
 }
