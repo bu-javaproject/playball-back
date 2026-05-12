@@ -50,3 +50,6 @@ Thumbs.db
 
 ### Security ###
 application-secret.yml
+
+### Claude Code ###
+.claude/

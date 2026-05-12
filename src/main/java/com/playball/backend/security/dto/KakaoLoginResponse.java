@@ -1,12 +1,11 @@
 package com.playball.backend.security.dto;
 
 import com.playball.backend.member.dto.MemberDTO;
+import com.playball.backend.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.lang.reflect.Member;
 
 @Getter
 @Builder
@@ -34,9 +33,22 @@ public class KakaoLoginResponse {
         private String role;
     }
 
-    // 이 객체를 이렇게 만들 레시피
-    public static KakaoLoginResponse of (String accessToken, String refreshToken, String tokenType, boolean isNewUser, MemberDTO member) {
+    public static KakaoLoginResponse of(String accessToken, String refreshToken, String tokenType, boolean isNewUser, MemberDTO member) {
+        return KakaoLoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .isNewUser(isNewUser)
+                .member(MemberInfo.builder()
+                        .memberId(member.getMemberId())
+                        .nickname(member.getNickname())
+                        .profileImage(member.getProfileImage())
+                        .role(member.getRole())
+                        .build())
+                .build();
+    }
 
+    public static KakaoLoginResponse of(String accessToken, String refreshToken, String tokenType, boolean isNewUser, Member member) {
         return KakaoLoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

@@ -34,7 +34,7 @@ public class MatchController {
     // 경기 상세 조회
     @GetMapping("/{matchId}")
     public ApiResponse<MatchDetailResponse> getMatch(
-            @PathVariable Long matchId) {
+            @PathVariable("matchId") Long matchId) {
         MatchDetailResponse response = matchService.getMatch(matchId);
         return ApiResponse.ok("경기 조회 성공", response);
     }
@@ -42,8 +42,8 @@ public class MatchController {
     // 경기 목록 조회
     @GetMapping
     public ApiResponse<List<MatchResponse>> getMatches(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         List<MatchResponse> response = matchService.getMatches(page, size);
         return ApiResponse.ok("경기 목록 조회 성공", response);
     }
@@ -56,19 +56,18 @@ public class MatchController {
         return ApiResponse.ok("경기 생성 성공", response);
     }
 
-    // 겅기 수정
+    // 경기 수정
     @PatchMapping("/{matchId}")
     public ApiResponse<MatchUpdateResponse> updateMatch(
-            @PathVariable Long matchId,
+            @PathVariable("matchId") Long matchId,
             @RequestBody MatchUpdateRequest request) {
         MatchUpdateResponse updatedMatch = matchService.updateMatch(matchId, request);
-
         return ApiResponse.ok("경기 수정 성공", updatedMatch);
     }
 
     // 경기 삭제
     @DeleteMapping("/{matchId}")
-    public ApiResponse<Void> deleteMatch(@PathVariable Long matchId) {
+    public ApiResponse<Void> deleteMatch(@PathVariable("matchId") Long matchId) {
         matchService.deleteMatch(matchId);
         return ApiResponse.ok("경기가 삭제되었습니다", null);
     }

@@ -49,6 +49,9 @@ public class SecurityConfig {
                         //WebSocket 연결
                         .requestMatchers("/ws/**")
                         .permitAll()
+                        //정적 리소스 (테스트 HTML 등)
+                        .requestMatchers("/*.html", "/static/**")
+                        .permitAll()
                         //나머지는 인증 필요
                         .anyRequest().authenticated()
                 )

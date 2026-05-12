@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 
 import com.playball.backend.domain.matching.dto.MatchJoinRequest;
 import com.playball.backend.domain.matching.dto.MatchRealtimeResponse;
-import com.playball.backend.domain.matching.dto.MatchResponse;
+import com.playball.backend.domain.matching.dto.MatchedResponse;
 import com.playball.backend.domain.matching.service.MatchRealtimeService;
 import com.playball.backend.domain.matching.service.MatchingService;
 
@@ -25,30 +25,25 @@ public class MatchWebSocketController {
     // 경기 참가
     @MessageMapping("/match/{matchId}/join")
     public void joinMatch(
-            @DestinationVariable Long matchId,
+            @DestinationVariable("matchId") Long matchId,
             @Payload MatchJoinRequest request) {
 
-        MatchResponse response = matchingService.joinMatch(matchId, request.getUserId());
+        MatchedResponse response = matchingService.joinMatch(matchId, request.getUserId());
 
-        // 실시간 브로드캐스트
-        messagingTemplate.convertAndSend(
-                "/topic/match/" + matchId,
-                response);
+        messagingTemplate.convertAndSend("/topic/match/" + matchId, response);
     }
 
     // 경기 퇴장
     @MessageMapping("/match/{matchId}/leave")
     public void leaveMatch(
-            @DestinationVariable Long matchId,
-            MatchJoinRequest request) {
+            @DestinationVariable("matchId") Long matchId,
+            @Payload MatchJoinRequest request) {
 
         MatchRealtimeResponse response = matchRealtimeService.leaveMatch(
                 matchId,
                 request.getUserId());
 
-        messagingTemplate.convertAndSend(
-                "/topic/match/" + matchId,
-                response);
+        messagingTemplate.convertAndSend("/topic/match/" + matchId, response);
     }
 
     // 실시간 인원 업데이트

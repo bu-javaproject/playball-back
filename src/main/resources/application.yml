@@ -2,12 +2,6 @@ spring:
   profiles:
     active: dev, secret    # dev + secret 프로필을 동시에 활성화
 
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.playball
-  configuration:
-    map-underscore-to-camel-case: true
-
 # JWT 토큰 만료 시간 (비밀키는 application-secret.yml에)
 jwt:
   access-expiration: 1800000       # Access Token 30분

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class MatchResponse {
+public class MatchedResponse {
 
     private Long matchId;
     private Integer currentPlayers;
