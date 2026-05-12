@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playball.backend.notification.mapper.DeviceTokenMapper">
+
+    <select id="findByToken"
+            resultType="com.playball.backend.notification.dto.DeviceTokenDTO">
+        SELECT device_token_id, member_id, token, platform, created_at, updated_at
+        FROM device_token
+        WHERE token = #{token}
+    </select>
+
+    <insert id="insertToken"
+            parameterType="com.playball.backend.notification.dto.DeviceTokenDTO"
+            useGeneratedKeys="true" keyProperty="deviceTokenId">
+        INSERT INTO device_token (member_id, token, platform)
+        VALUES (#{memberId}, #{token}, #{platform})
+    </insert>
+
+    <update id="updateMemberByToken">
+        UPDATE device_token
+        SET member_id = #{memberId}
+        WHERE token = #{token}
+    </update>
+
+    <select id="findByMemberId"
+            resultType="com.playball.backend.notification.dto.DeviceTokenDTO">
+        SELECT device_token_id, member_id, token, platform, created_at, updated_at
+        FROM device_token
+        WHERE member_id = #{memberId}
+    </select>
+
+    <delete id="deleteByToken">
+        DELETE FROM device_token WHERE token = #{token}
+    </delete>
+
+</mapper>

@@ -15,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Scanner;
 
 @Tag(name = "알림", description = "알림 목록 / 읽음 처리 / 알림 설정 / FCM 토큰 API")
 @RestController
