@@ -47,19 +47,19 @@ public class MatchService {
         matchMapper.insertMatch(match);
 
         return MatchCreateResponse.builder()
-                .matchId(match.getId())
-                .title(match.getTitle())
-                .sportType(match.getSportType().name())
-                .matchDate(match.getMatchDate())
-                .locationName(match.getLocationName())
-                .latitude(match.getLatitude())
-                .longitude(match.getLongitude())
-                .maxPlayers(match.getMaxPlayers())
-                .currentPlayers(match.getCurrentPlayers())
-                .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
-                .entryFee(match.getEntryFee())
-                .status(MatchStatus.OPEN)
-                .build();
+            .matchId(match.getId())
+            .title(match.getTitle())
+            .sportType(match.getSportType().name())
+            .matchDate(match.getMatchDate())
+            .locationName(match.getLocationName())
+            .latitude(match.getLatitude())
+            .longitude(match.getLongitude())
+            .maxPlayers(match.getMaxPlayers())
+            .currentPlayers(match.getCurrentPlayers())
+            .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
+            .entryFee(match.getEntryFee())
+            .status(MatchStatus.OPEN)
+            .build();
     }
 
     // 경기 정보 수정
@@ -92,7 +92,7 @@ public class MatchService {
                 .build();
     }
 
-
+    
 
     // 랜덤 매칭 요청
     public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
@@ -107,7 +107,7 @@ public class MatchService {
     }
 
     public List<MatchResponse> getMatches(int page, int size) {
-
+        
         int offset = page * size;
 
         List<Match> matches = matchMapper.findAll(offset, size);
@@ -137,7 +137,7 @@ public class MatchService {
     }
 
     public void deleteMatch(Long matchId) {
-
+        
         // 존재 여부 확인
         Match match = matchMapper.findById(matchId);
 
