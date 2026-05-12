@@ -1,5 +1,7 @@
 package com.playball.backend.notification.service;
 
+import com.playball.backend.common.exception.CustomException;
+import com.playball.backend.common.exception.ErrorCode;
 import com.playball.backend.notification.dto.NotificationDTO;
 import com.playball.backend.notification.dto.NotificationListResponse;
 import com.playball.backend.notification.mapper.NotificationMapper;
@@ -16,7 +18,7 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
 
     //내 알림 목록 조회
-    @Transactional
+    @Transactional(readOnly = true)
     public NotificationListResponse getMyNotifications(Long memberId,
                                                        Long cursor,
                                                        int size,
@@ -37,5 +39,48 @@ public class NotificationService {
                 .items(items)
                 .nextCursor(nextCursor)
                 .build();
+    }
+
+    //내 알림 읽음 (PATCH)
+    @Transactional(readOnly = true)
+    public void markAsRead(Long memberId, Long notificationId) {
+
+        // 1. 알림이 본인 것인지 확인 (보안)
+        NotificationDTO notification = notificationMapper.findById(notificationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        if (!notification.getMemberId().equals(memberId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        // 2. 읽음 처리
+        notificationMapper.markAsRead(notificationId);
+    }
+
+    //본인 모든 알림 읽음 처리
+    @Transactional(readOnly = true)
+    public int markAllAsRead(Long memberId) {
+        return notificationMapper.markAllAsReadByMember(memberId);
+    }
+
+    //본인 알림 삭제 처리
+    @Transactional(readOnly = true)
+    public void markAsDelete(Long memberId, Long notificationId) {
+        // 1. 알림이 본인 것인지 확인 (보안)
+        NotificationDTO notification = notificationMapper.findById(notificationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        if (!notification.getMemberId().equals(memberId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        notificationMapper.deleteById(notificationId);          // 삭제 호출
+        return;
+    }
+
+    //단순 카운트
+    @Transactional(readOnly = true)
+    public int getUnreadCount(Long memberId) {
+        return notificationMapper.countUnreadByMember(memberId);
     }
 }

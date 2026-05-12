@@ -13,6 +13,11 @@ jwt:
   access-expiration: 1800000       # Access Token 30분
   refresh-expiration: 604800000    # Refresh Token 7일
 
+springdoc:
+  swagger-ui:
+    enabled: true             ← true 인지 확인
+    path: /swagger-ui.html
+
 # 카카오 OAuth URL (API 키는 application-secret.yml에)
 kakao:
   token-uri: https://kauth.kakao.com/oauth/token
