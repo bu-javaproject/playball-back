@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.playball.backend.compliment.mapper.MemberComplimentSummaryMapper">
+
+    <insert id="incrementCount">
+        INSERT INTO member_compliment_summary (member_id, tag, count)
+        VALUES (#{memberId}, #{tag}, 1)
+        ON DUPLICATE KEY UPDATE
+        count = count + 1
+    </insert>
+
+    <select id="findByMemberId"
+            resultType="com.playball.backend.compliment.dto.MemberComplimentSummaryDTO">
+        SELECT member_id, tag, count, updated_at
+        FROM member_compliment_summary
+        WHERE member_id = #{memberId}
+        ORDER BY count DESC
+    </select>
+
+    <select id="sumCountByMemberId" resultType="int">
+        SELECT COALESCE(SUM(count), 0)
+        FROM member_compliment_summary
+        WHERE member_id = #{memberId}
+    </select>
+
+</mapper>

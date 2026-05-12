@@ -33,9 +33,9 @@ public enum ErrorCode {
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참가한 경기입니다."),
     MATCH_DELETED(HttpStatus.CONFLICT, "이미 삭제된 경기입니다."),
 
-
-    // 채팅
-    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 채팅방입니다.");
+    // 칭찬
+    SELF_COMPLIMENT(HttpStatus.BAD_REQUEST, "자기 자신은 칭찬할 수 없습니다."),
+    DUPLICATE_COMPLIMENT(HttpStatus.CONFLICT, "이미 칭찬한 참가자가 포함되어 있습니다.");
 
     private final HttpStatus status;
     private final String message;
