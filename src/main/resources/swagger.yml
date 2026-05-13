@@ -93,51 +93,46 @@ paths:
                 authorizationCode:
                   type: string
                   description: 카카오 인가코드
-                redirectUri:
-                  type: string
-                  description: 카카오 리다이렉트 URI
             example:
               authorizationCode: "ABCDEF123456"
-              redirectUri: "http://localhost:3000/oauth/kakao"
       responses:
         '200':
-          description: 로그인 성공 (기존 회원)
+          description: 로그인 성공 (기존 회원 / 신규 회원 모두 200 반환. isNewUser로 구분)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "로그인 성공"
-                data:
-                  accessToken: "eyJhbGciOiJIUzI1NiJ9..."
-                  refreshToken: "dGhpcyBpcyByZWZyZXNo..."
-                  tokenType: "Bearer"
-                  isNewUser: false
-                  member:
-                    memberId: 1
-                    nickname: "홍길동"
-                    profileImage: "https://k.kakaocdn.net/..."
-                    role: "USER"
-        '201':
-          description: 신규 가입 → 추가정보 입력 필요
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-              example:
-                success: true
-                message: "추가 정보 입력이 필요합니다"
-                data:
-                  accessToken: "eyJhbGciOiJIUzI1NiJ9..."
-                  refreshToken: "dGhpcyBpcyByZWZyZXNo..."
-                  tokenType: "Bearer"
-                  isNewUser: true
-                  member:
-                    memberId: 2
-                    nickname: null
-                    profileImage: "https://k.kakaocdn.net/..."
-                    role: "USER"
+              examples:
+                existingUser:
+                  summary: 기존 회원 → 로그인 성공
+                  value:
+                    success: true
+                    message: "로그인 성공"
+                    data:
+                      accessToken: "eyJhbGciOiJIUzI1NiJ9..."
+                      refreshToken: "dGhpcyBpcyByZWZyZXNo..."
+                      tokenType: "Bearer"
+                      isNewUser: false
+                      member:
+                        memberId: 1
+                        nickname: "홍길동"
+                        profileImage: "https://k.kakaocdn.net/..."
+                        role: "USER"
+                newUser:
+                  summary: 신규 회원 → 추가정보 입력 필요
+                  value:
+                    success: true
+                    message: "추가 정보 입력이 필요합니다"
+                    data:
+                      accessToken: "eyJhbGciOiJIUzI1NiJ9..."
+                      refreshToken: "dGhpcyBpcyByZWZyZXNo..."
+                      tokenType: "Bearer"
+                      isNewUser: true
+                      member:
+                        memberId: 2
+                        nickname: null
+                        profileImage: "https://k.kakaocdn.net/..."
+                        role: "USER"
 
   /api/auth/refresh:
     post:

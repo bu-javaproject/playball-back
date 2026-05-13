@@ -29,7 +29,7 @@ public class AuthController {
     @PostMapping("/kakao")
     public ApiResponse<KakaoLoginResponse> kakaoLogin(@Valid @RequestBody KakaoLoginRequest request) {
         KakaoLoginResponse response = authService.kakaoLogin(
-                request.getAuthorizationCode(), request.getRedirectUri());
+                request.getAuthorizationCode());
         String message = response.isNewUser() ? "추가 정보 입력이 필요합니다" : "로그인 성공";
         return ApiResponse.ok(message, response);
     }

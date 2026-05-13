@@ -12,6 +12,8 @@ import com.playball.backend.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +29,11 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoOAuthService kakaoOAuthService;
 
+    @Value("${kakao.redirect-uri}") // yml에서 직접 읽어옴
+    private String redirectUri;
+
     @Transactional
-    public KakaoLoginResponse kakaoLogin(String authorizationCode, String redirectUri) {
+    public KakaoLoginResponse kakaoLogin(String authorizationCode) {
         String kakaoAccessToken = kakaoOAuthService.getAccessToken(authorizationCode, redirectUri);
         KakaoOAuthService.KakaoUserInfo kakaoUser = kakaoOAuthService.getUserInfo(kakaoAccessToken);
 
