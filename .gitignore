@@ -53,3 +53,5 @@ application-secret.yml
 
 ### Claude Code ###
 .claude/
+
+src/main/resources/application-secret.yml
