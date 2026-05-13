@@ -10,8 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,37 +25,27 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(summary = "카카오 로그인",
-            description = "카카오 인가코드로 로그인합니다. 신규 회원이면 201 + isNewUser:true를 반환합니다.")
+            description = "카카오 인가코드로 로그인합니다. 신규 회원이면 isNewUser:true를 반환합니다.")
     @PostMapping("/kakao")
-    public ResponseEntity<ApiResponse<KakaoLoginResponse>> kakaoLogin(
-            @Valid @RequestBody KakaoLoginRequest request) {
-
+    public ApiResponse<KakaoLoginResponse> kakaoLogin(@Valid @RequestBody KakaoLoginRequest request) {
         KakaoLoginResponse response = authService.kakaoLogin(
                 request.getAuthorizationCode(), request.getRedirectUri());
-
-        if (response.isNewUser()) {
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.ok("추가 정보 입력이 필요합니다", response));
-        }
-        return ResponseEntity.ok(ApiResponse.ok("로그인 성공", response));
+        String message = response.isNewUser() ? "추가 정보 입력이 필요합니다" : "로그인 성공";
+        return ApiResponse.ok(message, response);
     }
 
     @Operation(summary = "토큰 재발급",
             description = "Refresh Token으로 새로운 Access + Refresh 토큰을 발급받습니다.")
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<KakaoLoginResponse>> refresh(
-            @Valid @RequestBody TokenRefreshRequest request) {
-
-        KakaoLoginResponse response = authService.refreshAccessToken(request.getRefreshToken());
-        return ResponseEntity.ok(ApiResponse.ok("토큰 재발급 성공", response));
+    public ApiResponse<KakaoLoginResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
+        return ApiResponse.ok("토큰 재발급 성공", authService.refreshAccessToken(request.getRefreshToken()));
     }
 
-    @Operation(summary = "로그아웃",
-            description = "서버의 Refresh Token을 삭제합니다.")
+    @Operation(summary = "로그아웃", description = "서버의 Refresh Token을 삭제합니다.")
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(Authentication authentication) {
+    public ApiResponse<Void> logout(Authentication authentication) {
         Long memberId = (Long) authentication.getPrincipal();
         authService.logout(memberId);
-        return ResponseEntity.ok(ApiResponse.ok("로그아웃 성공", null));
+        return ApiResponse.ok("로그아웃 성공", null);
     }
 }
