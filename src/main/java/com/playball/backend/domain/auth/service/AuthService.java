@@ -1,13 +1,14 @@
-package com.playball.backend.domain.security.service;
+package com.playball.backend.domain.auth.service;
 
 import com.playball.backend.common.exception.CustomException;
 import com.playball.backend.common.exception.ErrorCode;
+import com.playball.backend.domain.auth.jwt.JwtTokenProvider;
+import com.playball.backend.domain.auth.oauth.KakaoOAuthService;
+import com.playball.backend.domain.auth.dto.KakaoLoginResponse;
+import com.playball.backend.domain.auth.entity.RefreshToken;
+import com.playball.backend.domain.auth.repository.RefreshTokenRepository;
 import com.playball.backend.domain.member.entity.Member;
 import com.playball.backend.domain.member.repository.MemberRepository;
-import com.playball.backend.domain.security.JwtTokenProvider;
-import com.playball.backend.domain.security.dto.KakaoLoginResponse;
-import com.playball.backend.domain.security.entity.RefreshToken;
-import com.playball.backend.domain.security.repository.RefreshTokenRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +69,6 @@ public class AuthService {
         Member member = memberRepository.findById(storedToken.getMemberId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        refreshTokenRepository.deleteByMemberId(member.getMemberId());
         String newRefreshToken = createAndSaveRefreshToken(member.getMemberId());
         String newAccessToken = jwtTokenProvider.createAccessToken(
                 String.valueOf(member.getMemberId()), member.getRole());

@@ -1,4 +1,4 @@
-package com.playball.backend.domain.security.entity;
+package com.playball.backend.domain.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

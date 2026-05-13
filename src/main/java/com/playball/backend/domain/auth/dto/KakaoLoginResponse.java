@@ -1,6 +1,5 @@
-package com.playball.backend.domain.security.dto;
+package com.playball.backend.domain.auth.dto;
 
-import com.playball.backend.domain.member.dto.MemberDTO;
 import com.playball.backend.domain.member.entity.Member;
 
 import lombok.AllArgsConstructor;
@@ -32,21 +31,6 @@ public class KakaoLoginResponse {
         private String nickname;
         private String profileImage;
         private String role;
-    }
-
-    public static KakaoLoginResponse of(String accessToken, String refreshToken, String tokenType, boolean isNewUser, MemberDTO member) {
-        return KakaoLoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .isNewUser(isNewUser)
-                .member(MemberInfo.builder()
-                        .memberId(member.getMemberId())
-                        .nickname(member.getNickname())
-                        .profileImage(member.getProfileImage())
-                        .role(member.getRole())
-                        .build())
-                .build();
     }
 
     public static KakaoLoginResponse of(String accessToken, String refreshToken, String tokenType, boolean isNewUser, Member member) {

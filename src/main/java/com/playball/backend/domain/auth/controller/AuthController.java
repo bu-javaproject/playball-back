@@ -1,10 +1,10 @@
-package com.playball.backend.domain.security.controller;
+package com.playball.backend.domain.auth.controller;
 
 import com.playball.backend.common.dto.ApiResponse;
-import com.playball.backend.domain.security.dto.KakaoLoginRequest;
-import com.playball.backend.domain.security.dto.KakaoLoginResponse;
-import com.playball.backend.domain.security.dto.TokenRefreshRequest;
-import com.playball.backend.domain.security.service.AuthService;
+import com.playball.backend.domain.auth.dto.KakaoLoginRequest;
+import com.playball.backend.domain.auth.dto.KakaoLoginResponse;
+import com.playball.backend.domain.auth.dto.TokenRefreshRequest;
+import com.playball.backend.domain.auth.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

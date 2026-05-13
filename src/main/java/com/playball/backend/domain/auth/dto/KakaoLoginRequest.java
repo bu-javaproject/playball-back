@@ -1,4 +1,4 @@
-package com.playball.backend.domain.security.dto;
+package com.playball.backend.domain.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
