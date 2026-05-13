@@ -92,4 +92,9 @@ public class Match {
         this.currentPlayers = this.currentPlayers + 1;
         this.status = newStatus;
     }
+
+    public void updatePlayerCount(Integer currentPlayers, MatchStatus newStatus) {
+        this.currentPlayers = currentPlayers;
+        this.status = newStatus;
+    }
 }

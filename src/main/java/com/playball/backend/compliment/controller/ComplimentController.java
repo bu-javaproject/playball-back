@@ -7,13 +7,13 @@ import com.playball.backend.compliment.dto.ComplimentListResponse;
 import com.playball.backend.compliment.dto.ComplimentSummaryDTO;
 import com.playball.backend.compliment.service.ComplimentService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;

@@ -3,6 +3,8 @@ package com.playball.backend.domain.matching.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.playball.backend.common.exception.CustomException;
+import com.playball.backend.common.exception.ErrorCode;
 import com.playball.backend.domain.matching.dto.MatchedResponse;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
@@ -19,10 +21,10 @@ public class MatchingService {
     @Transactional
     public MatchedResponse joinMatch(Long matchId, Long userId) {
         Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("경기를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
         if (match.getCurrentPlayers() >= match.getMaxPlayers()) {
-            throw new RuntimeException("정원이 가득 찼습니다.");
+            throw new CustomException(ErrorCode.MATCH_FULL);
         }
 
         int updatedPlayers = match.getCurrentPlayers() + 1;

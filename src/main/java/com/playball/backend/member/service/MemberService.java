@@ -29,7 +29,7 @@ public class MemberService {
         }
 
         if (memberRepository.existsByNickname(request.getNickname())) {
-            throw new CustomException(ErrorCode.SIGNUP_ALREADY_COMPLETED);
+            throw new CustomException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
         member.completeSignup(

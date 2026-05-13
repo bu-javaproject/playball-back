@@ -1,17 +1,16 @@
 package com.playball.backend.notification.controller;
 
 import com.playball.backend.common.dto.ApiResponse;
-import com.playball.backend.notification.dto.DeviceTokenDTO;
 import com.playball.backend.notification.dto.DeviceTokenRequest;
 import com.playball.backend.notification.service.DeviceTokenService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "알림", description = "FCM 토큰 등록/삭제")
 @RestController
