@@ -1,6 +1,5 @@
 package com.playball.backend.config;
 
-import com.playball.backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +11,8 @@ import org.springframework.security.core.session.SessionCreationEvent;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import com.playball.backend.domain.security.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
