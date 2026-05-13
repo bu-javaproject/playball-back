@@ -15,11 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.playball.backend.common.dto.ApiResponse;
 import com.playball.backend.domain.matches.dto.MatchCreateRequest;
 import com.playball.backend.domain.matches.dto.MatchCreateResponse;
+import com.playball.backend.domain.matches.dto.MatchDetailResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
 import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
-import com.playball.backend.domain.matches.dto.RandomMatchRequest;
-import com.playball.backend.domain.matches.dto.RandomMatchResponse;
 import com.playball.backend.domain.matches.service.MatchService;
 
 import jakarta.validation.Valid;
@@ -32,60 +31,54 @@ public class MatchController {
 
     private final MatchService matchService;
 
-    // 생성
-    @PostMapping
-    public ApiResponse<MatchCreateResponse> createMatch(
-            @Valid @RequestBody MatchCreateRequest request
-    ) {
-        MatchCreateResponse response = matchService.createMatch(request);
-        return ApiResponse.ok("경기 생성 성공", response);
-    }
-
-    // 수정
-    @PatchMapping("/{matchId}")
-    public ApiResponse<MatchUpdateResponse> updateMatch(
-            @PathVariable Long matchId,
-            @RequestBody MatchUpdateRequest request
-    ) {
-        MatchUpdateResponse updatedMatch = matchService.updateMatch(matchId, request);
-
-        return ApiResponse.ok("경기 수정 성공", updatedMatch);
-    }
-
-    // 랜덤 매칭 요청
-    @PostMapping("/random")
-    public ApiResponse<RandomMatchResponse> getRandomMatch(
-            @Valid @RequestBody RandomMatchRequest request
-    ) {
-        RandomMatchResponse response = matchService.findRandomMatch(request);
-        return ApiResponse.ok("랜덤 매칭 성공", response);
-    }
-
     // 경기 상세 조회
     @GetMapping("/{matchId}")
-    public ApiResponse<MatchResponse> getMatch(
-            @PathVariable Long matchId
-    ) {
-        MatchResponse response = matchService.getMatch(matchId);
+    public ApiResponse<MatchDetailResponse> getMatch(
+            @PathVariable("matchId") Long matchId) {
+        MatchDetailResponse response = matchService.getMatch(matchId);
         return ApiResponse.ok("경기 조회 성공", response);
     }
-
 
     // 경기 목록 조회
     @GetMapping
     public ApiResponse<List<MatchResponse>> getMatches(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         List<MatchResponse> response = matchService.getMatches(page, size);
         return ApiResponse.ok("경기 목록 조회 성공", response);
     }
 
-    // 매치 삭제
+    // 경기 생성
+    @PostMapping
+    public ApiResponse<MatchCreateResponse> createMatch(
+            @Valid @RequestBody MatchCreateRequest request) {
+        MatchCreateResponse response = matchService.createMatch(request);
+        return ApiResponse.ok("경기 생성 성공", response);
+    }
+
+    // 경기 수정
+    @PatchMapping("/{matchId}")
+    public ApiResponse<MatchUpdateResponse> updateMatch(
+            @PathVariable("matchId") Long matchId,
+            @RequestBody MatchUpdateRequest request) {
+        MatchUpdateResponse updatedMatch = matchService.updateMatch(matchId, request);
+        return ApiResponse.ok("경기 수정 성공", updatedMatch);
+    }
+
+    // 경기 삭제
     @DeleteMapping("/{matchId}")
-    public ApiResponse<Void> deleteMatch(@PathVariable Long matchId) {
+    public ApiResponse<Void> deleteMatch(@PathVariable("matchId") Long matchId) {
         matchService.deleteMatch(matchId);
         return ApiResponse.ok("경기가 삭제되었습니다", null);
     }
+
+    // // 랜덤 매칭 요청
+    // @PostMapping("/random")
+    // public ApiResponse<RandomMatchResponse> getRandomMatch(
+    // @Valid @RequestBody RandomMatchRequest request
+    // ) {
+    // RandomMatchResponse response = matchService.findRandomMatch(request);
+    // return ApiResponse.ok("랜덤 매칭 성공", response);
+    // }
 
 }
