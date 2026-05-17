@@ -5,6 +5,7 @@ import com.playball.backend.common.exception.ErrorCode;
 import com.playball.backend.domain.matching.dto.MatchRealtimeResponse;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
+import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,11 +16,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class MatchRealtimeService {
 
     private final MatchingRepository matchRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     @Transactional
     public MatchRealtimeResponse leaveMatch(Long matchId, Long userId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        matchParticipantRepository
+                .findByMatch_IdAndMember_MemberId(matchId, userId)
+                .ifPresent(p -> p.cancel());
 
         int updatedPlayers = Math.max(0, match.getCurrentPlayers() - 1);
         MatchStatus updatedStatus = updatedPlayers < match.getMaxPlayers()
