@@ -10,6 +10,7 @@ import com.playball.backend.common.resolver.CurrentMemberIdArgumentResolver;
 import com.playball.backend.domain.matching.dto.MatchedResponse;
 import com.playball.backend.domain.matching.service.MatchRealtimeService;
 import com.playball.backend.domain.matching.service.MatchingService;
+import com.playball.backend.domain.matches.dto.MatchCreateResponse;
 import com.playball.backend.domain.matches.dto.MatchDetailResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.RandomMatchRequest;
@@ -80,6 +81,119 @@ class MatchControllerTest {
     @AfterEach
     void clearAuth() {
         SecurityContextHolder.clearContext();
+    }
+
+    // -------------------------------------------------------
+    // 지역 매칭 주최자 흐름: POST /api/matches — 경기 생성
+    // -------------------------------------------------------
+
+    @Test
+    @DisplayName("POST /api/matches — 정상 경기 생성 200")
+    void createMatch_성공_200() throws Exception {
+        MatchCreateResponse response = MatchCreateResponse.builder()
+                .matchId(MATCH_ID)
+                .title("목동 풋살")
+                .sportType("SOCCER")
+                .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                .locationName("서울 목동운동장")
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .address("서울특별시 양천구")
+                .maxPlayers(10)
+                .currentPlayers(1)
+                .entryFee(5000)
+                .status(MatchStatus.OPEN)
+                .build();
+        given(matchService.createMatch(any(), eq(MEMBER_ID))).willReturn(response);
+
+        String json = """
+                {
+                  "title": "목동 풋살",
+                  "sportType": "SOCCER",
+                  "matchDate": "2026-06-01T14:00:00",
+                  "locationName": "서울 목동운동장",
+                  "latitude": 37.5263,
+                  "longitude": 126.8967,
+                  "address": "서울특별시 양천구",
+                  "maxPlayers": 10,
+                  "entryFee": 5000
+                }
+                """;
+
+        mockMvc.perform(post("/api/matches")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.matchId").value(MATCH_ID.intValue()))
+                .andExpect(jsonPath("$.data.sportType").value("SOCCER"))
+                .andExpect(jsonPath("$.data.currentPlayers").value(1))
+                .andExpect(jsonPath("$.data.address").value("서울특별시 양천구"))
+                .andExpect(jsonPath("$.data.status").value("OPEN"));
+    }
+
+    @Test
+    @DisplayName("POST /api/matches — 과거 날짜 입력 시 400")
+    void createMatch_과거날짜_400() throws Exception {
+        String json = """
+                {
+                  "title": "목동 풋살",
+                  "sportType": "SOCCER",
+                  "matchDate": "2020-01-01T14:00:00",
+                  "latitude": 37.5263,
+                  "longitude": 126.8967,
+                  "maxPlayers": 10
+                }
+                """;
+
+        mockMvc.perform(post("/api/matches")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/matches — title 누락 시 400")
+    void createMatch_필수값_누락_400() throws Exception {
+        String json = """
+                {
+                  "sportType": "SOCCER",
+                  "matchDate": "2026-06-01T14:00:00",
+                  "latitude": 37.5263,
+                  "longitude": 126.8967,
+                  "maxPlayers": 10
+                }
+                """;
+
+        mockMvc.perform(post("/api/matches")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/matches — 존재하지 않는 sportType 400")
+    void createMatch_잘못된sportType_400() throws Exception {
+        given(matchService.createMatch(any(), eq(MEMBER_ID)))
+                .willThrow(new CustomException(ErrorCode.INVALID_INPUT));
+
+        String json = """
+                {
+                  "title": "목동 풋살",
+                  "sportType": "CRICKET",
+                  "matchDate": "2026-06-01T14:00:00",
+                  "latitude": 37.5263,
+                  "longitude": 126.8967,
+                  "maxPlayers": 10
+                }
+                """;
+
+        mockMvc.perform(post("/api/matches")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_INPUT.getMessage()));
     }
 
     // -------------------------------------------------------

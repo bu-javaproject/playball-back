@@ -2,6 +2,8 @@ package com.playball.backend.domain.matches.service;
 
 import com.playball.backend.common.exception.CustomException;
 import com.playball.backend.common.exception.ErrorCode;
+import com.playball.backend.domain.matches.dto.MatchCreateRequest;
+import com.playball.backend.domain.matches.dto.MatchCreateResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.NearbyMatchView;
 import com.playball.backend.domain.matches.dto.RandomMatchRequest;
@@ -11,7 +13,9 @@ import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
 import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
+import com.playball.backend.domain.matching.entity.ParticipantStatus;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
+import com.playball.backend.domain.member.entity.Member;
 import com.playball.backend.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
@@ -40,6 +46,129 @@ class MatchServiceTest {
     @InjectMocks MatchService matchService;
 
     private static final Long MEMBER_ID = 1L;
+
+    // -------------------------------------------------------
+    // 지역 매칭 주최자 흐름: POST /api/matches — 경기 생성
+    // -------------------------------------------------------
+
+    @Test
+    @DisplayName("정상 요청 시 경기가 생성되고 주최자가 APPROVED 참가자로 등록된다")
+    void createMatch_성공() {
+        Member host = mock(Member.class);
+        Match savedMatch = Match.builder()
+                .id(100L)
+                .hostId(MEMBER_ID)
+                .title("목동 풋살")
+                .sportType(SportType.SOCCER)
+                .matchDate(LocalDateTime.now().plusDays(1))
+                .locationName("서울 목동운동장")
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .address("서울특별시 양천구")
+                .maxPlayers(10)
+                .currentPlayers(1)
+                .entryFee(5000)
+                .status(MatchStatus.OPEN)
+                .build();
+
+        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(host));
+        given(matchingRepository.save(any())).willReturn(savedMatch);
+
+        MatchCreateRequest request = MatchCreateRequest.builder()
+                .title("목동 풋살")
+                .sportType("SOCCER")
+                .matchDate(LocalDateTime.now().plusDays(1))
+                .locationName("서울 목동운동장")
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .entryFee(5000)
+                .build();
+
+        MatchCreateResponse response = matchService.createMatch(request, MEMBER_ID);
+
+        assertThat(response.getMatchId()).isEqualTo(100L);
+        assertThat(response.getSportType()).isEqualTo("SOCCER");
+        assertThat(response.getCurrentPlayers()).isEqualTo(1);
+        assertThat(response.getStatus()).isEqualTo(MatchStatus.OPEN);
+        verify(matchParticipantRepository).save(argThat(p -> p.getStatus() == ParticipantStatus.APPROVED));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 memberId로 생성 시 USER_NOT_FOUND — 경기 저장이 선행되지 않는다")
+    void createMatch_없는회원_예외() {
+        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.empty());
+
+        MatchCreateRequest request = MatchCreateRequest.builder()
+                .title("목동 풋살")
+                .sportType("SOCCER")
+                .matchDate(LocalDateTime.now().plusDays(1))
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .build();
+
+        assertThatThrownBy(() -> matchService.createMatch(request, MEMBER_ID))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+
+        verify(matchingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("잘못된 sportType 입력 시 INVALID_INPUT 예외가 발생한다")
+    void createMatch_잘못된sportType_예외() {
+        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(mock(Member.class)));
+
+        MatchCreateRequest request = MatchCreateRequest.builder()
+                .title("목동 풋살")
+                .sportType("CRICKET")
+                .matchDate(LocalDateTime.now().plusDays(1))
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .build();
+
+        assertThatThrownBy(() -> matchService.createMatch(request, MEMBER_ID))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    @DisplayName("entryFee를 생략하면 0으로 저장된다")
+    void createMatch_entryFee_null이면_0저장() {
+        Member host = mock(Member.class);
+        Match savedMatch = Match.builder()
+                .id(100L)
+                .title("목동 풋살")
+                .sportType(SportType.SOCCER)
+                .matchDate(LocalDateTime.now().plusDays(1))
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .currentPlayers(1)
+                .entryFee(0)
+                .status(MatchStatus.OPEN)
+                .build();
+
+        given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(host));
+        given(matchingRepository.save(any())).willReturn(savedMatch);
+
+        MatchCreateRequest request = MatchCreateRequest.builder()
+                .title("목동 풋살")
+                .sportType("SOCCER")
+                .matchDate(LocalDateTime.now().plusDays(1))
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .build();
+
+        matchService.createMatch(request, MEMBER_ID);
+
+        verify(matchingRepository).save(argThat(m -> Integer.valueOf(0).equals(m.getEntryFee())));
+    }
 
     // -------------------------------------------------------
     // 화면 ④: POST /api/matches/random — 랜덤 경기 탐색
