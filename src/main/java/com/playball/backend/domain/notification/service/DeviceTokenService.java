@@ -47,9 +47,13 @@ public class DeviceTokenService {
     }
 
     @Transactional
-    public void deleteToken(String token) {
-        deviceTokenRepository.deleteByToken(token);
-        log.info("FCM 토큰 삭제: token={}", maskToken(token));
+    public void deleteToken(String token, Long memberId) {
+        deviceTokenRepository.findByToken(token).ifPresent(deviceToken -> {
+            if (deviceToken.getMemberId().equals(memberId)) {
+                deviceTokenRepository.delete(deviceToken);
+                log.info("FCM 토큰 삭제: token={}", maskToken(token));
+            }
+        });
     }
 
     private String maskToken(String token) {
