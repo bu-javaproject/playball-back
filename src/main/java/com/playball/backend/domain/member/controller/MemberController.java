@@ -6,7 +6,9 @@ import com.playball.backend.common.annotation.CurrentMemberId;
 import com.playball.backend.common.dto.ApiResponse;
 import com.playball.backend.domain.member.dto.LocationUpdateRequest;
 import com.playball.backend.domain.member.dto.MemberDTO;
+import com.playball.backend.domain.member.dto.ProfileResponse;
 import com.playball.backend.domain.member.dto.SignUpCompleteRequest;
+import com.playball.backend.domain.member.dto.UpdateProfileRequest;
 import com.playball.backend.domain.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,22 +43,22 @@ public class MemberController {
 
     @Operation(summary = "내 프로필 조회")
     @GetMapping("/me")
-    public ApiResponse<MemberDTO> getMyProfile(@CurrentMemberId Long memberId) {
+    public ApiResponse<ProfileResponse> getMyProfile(@CurrentMemberId Long memberId) {
         return ApiResponse.ok("프로필 조회 성공", memberService.getMyProfile(memberId));
     }
 
     @Operation(summary = "다른 회원 프로필 조회")
     @GetMapping("/{memberId}")
-    public ApiResponse<MemberDTO> getMember(@PathVariable Long memberId) {
+    public ApiResponse<ProfileResponse> getMember(@PathVariable Long memberId) {
         return ApiResponse.ok("회원 조회 성공", memberService.getMemberById(memberId));
     }
 
-    @Operation(summary = "프로필 수정")
-    @PutMapping("/me/edit")
-    public ApiResponse<MemberDTO> updateProfile(
+    @Operation(summary = "프로필 수정 (닉네임·활동지역·선호운동)")
+    @PatchMapping("/me")
+    public ApiResponse<ProfileResponse> updateProfile(
             @CurrentMemberId Long memberId,
-            @RequestBody MemberDTO updateRequest) {
-        return ApiResponse.ok("프로필이 수정되었습니다", memberService.updateProfile(memberId, updateRequest));
+            @Valid @RequestBody UpdateProfileRequest request) {
+        return ApiResponse.ok("프로필이 수정되었습니다", memberService.updateProfile(memberId, request));
     }
 
     @Operation(summary = "위치 정보 업데이트")
