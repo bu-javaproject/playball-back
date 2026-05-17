@@ -32,6 +32,10 @@ public class MatchingService {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
+        if (match.getStatus() == MatchStatus.DELETED) {
+            throw new CustomException(ErrorCode.MATCH_DELETED);
+        }
+
         if (match.getCurrentPlayers() >= match.getMaxPlayers()) {
             throw new CustomException(ErrorCode.MATCH_FULL);
         }
