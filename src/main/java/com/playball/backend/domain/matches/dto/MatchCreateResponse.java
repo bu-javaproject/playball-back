@@ -24,11 +24,16 @@ public class MatchCreateResponse {
     private Double latitude;
     private Double longitude;
 
+    private String address;
+
     private Integer maxPlayers;
     private Integer currentPlayers;
 
+    private String gender;
+    private Integer ageRange;
     private String skillLevel;
     private Integer entryFee;
+    private String description;
 
     private MatchStatus status;
 }

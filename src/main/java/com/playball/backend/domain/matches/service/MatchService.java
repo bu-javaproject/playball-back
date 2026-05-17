@@ -40,10 +40,20 @@ public class MatchService {
 
     @Transactional
     public MatchCreateResponse createMatch(MatchCreateRequest request, Long hostId) {
+        Member host = memberRepository.findById(hostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        SportType sportType;
+        try {
+            sportType = SportType.valueOf(request.getSportType());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+
         Match match = Match.builder()
                 .hostId(hostId)
                 .title(request.getTitle())
-                .sportType(SportType.valueOf(request.getSportType()))
+                .sportType(sportType)
                 .matchDate(request.getMatchDate())
                 .locationName(request.getLocationName())
                 .latitude(request.getLatitude())
@@ -54,15 +64,12 @@ public class MatchService {
                 .gender(request.getGender())
                 .ageRange(request.getAgeRange())
                 .skillLevel(request.getSkillLevel())
-                .entryFee(request.getEntryFee())
+                .entryFee(request.getEntryFee() != null ? request.getEntryFee() : 0)
                 .description(request.getDescription())
                 .status(MatchStatus.OPEN)
                 .build();
 
         Match saved = matchingRepository.save(match);
-
-        Member host = memberRepository.findById(hostId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         matchParticipantRepository.save(MatchParticipant.builder()
                 .match(saved)
@@ -78,10 +85,14 @@ public class MatchService {
                 .locationName(saved.getLocationName())
                 .latitude(saved.getLatitude())
                 .longitude(saved.getLongitude())
+                .address(saved.getAddress())
                 .maxPlayers(saved.getMaxPlayers())
                 .currentPlayers(saved.getCurrentPlayers())
+                .gender(saved.getGender())
+                .ageRange(saved.getAgeRange())
                 .skillLevel(saved.getSkillLevel() != null ? saved.getSkillLevel().name() : null)
                 .entryFee(saved.getEntryFee())
+                .description(saved.getDescription())
                 .status(MatchStatus.OPEN)
                 .build();
     }
