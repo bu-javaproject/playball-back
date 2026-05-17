@@ -1,5 +1,6 @@
 package com.playball.backend.domain.matching.repository;
 
+import com.playball.backend.domain.matches.dto.NearbyMatchView;
 import com.playball.backend.domain.matches.dto.RandomMatchView;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
@@ -17,6 +18,42 @@ public interface MatchingRepository extends JpaRepository<Match, Long> {
     List<Match> findByStatusNot(MatchStatus status, Pageable pageable);
 
     Optional<Match> findByIdAndStatusNot(Long id, MatchStatus status);
+
+    @Query(value = """
+            SELECT matchId, title, sportType, matchDate, locationName,
+                   latitude, longitude, maxPlayers, currentPlayers, status, distance
+            FROM (
+                SELECT
+                    id                AS matchId,
+                    title,
+                    sport_type        AS sportType,
+                    match_date        AS matchDate,
+                    location_name     AS locationName,
+                    latitude,
+                    longitude,
+                    max_players       AS maxPlayers,
+                    current_players   AS currentPlayers,
+                    status,
+                    (6371 * ACOS(
+                        COS(RADIANS(:latitude))
+                        * COS(RADIANS(latitude))
+                        * COS(RADIANS(longitude) - RADIANS(:longitude))
+                        + SIN(RADIANS(:latitude))
+                        * SIN(RADIANS(latitude))
+                    )) AS distance
+                FROM matches
+                WHERE status = 'OPEN'
+                  AND (:sportType IS NULL OR sport_type = :sportType)
+            ) t
+            WHERE t.distance <= :radius
+            ORDER BY t.distance
+            """, nativeQuery = true)
+    List<NearbyMatchView> findNearbyMatches(
+            @Param("latitude") Double latitude,
+            @Param("longitude") Double longitude,
+            @Param("radius") Double radius,
+            @Param("sportType") String sportType
+    );
 
     @Query(value = """
             SELECT matchId, title, sportType, matchDate, locationName, entryFee,

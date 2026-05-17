@@ -48,12 +48,18 @@ public class MatchController {
         return ApiResponse.ok("경기 조회 성공", matchService.getMatch(matchId));
     }
 
-    @Operation(summary = "경기 목록 조회")
+    @Operation(summary = "경기 목록 조회",
+            description = "latitude/longitude 제공 시 반경(radius km, 기본 5km) 내 OPEN 경기를 거리순으로 반환. 미제공 시 전체 목록을 페이지네이션으로 반환.")
     @GetMapping
     public ApiResponse<List<MatchResponse>> getMatches(
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(defaultValue = "5.0") Double radius,
+            @RequestParam(required = false) String sportType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.ok("경기 목록 조회 성공", matchService.getMatches(page, size));
+        return ApiResponse.ok("경기 목록 조회 성공",
+                matchService.getMatches(latitude, longitude, radius, sportType, page, size));
     }
 
     @Operation(summary = "경기 생성")

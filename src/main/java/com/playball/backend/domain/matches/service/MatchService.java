@@ -14,6 +14,7 @@ import com.playball.backend.domain.matches.dto.MatchDetailResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
 import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
+import com.playball.backend.domain.matches.dto.NearbyMatchView;
 import com.playball.backend.domain.matches.dto.RandomMatchRequest;
 import com.playball.backend.domain.matches.dto.RandomMatchResponse;
 import com.playball.backend.domain.matches.entity.Match;
@@ -156,7 +157,15 @@ public class MatchService {
                 .build();
     }
 
-    public List<MatchResponse> getMatches(int page, int size) {
+    public List<MatchResponse> getMatches(Double latitude, Double longitude, Double radius,
+                                           String sportType, int page, int size) {
+        if (latitude != null && longitude != null) {
+            return matchingRepository
+                    .findNearbyMatches(latitude, longitude, radius, sportType)
+                    .stream()
+                    .map(this::toNearbyResponse)
+                    .toList();
+        }
         return matchingRepository
                 .findByStatusNot(MatchStatus.DELETED, PageRequest.of(page, size))
                 .stream()
@@ -180,6 +189,21 @@ public class MatchService {
             throw new CustomException(ErrorCode.MATCH_DELETED);
         }
         return match;
+    }
+
+    private MatchResponse toNearbyResponse(NearbyMatchView view) {
+        return MatchResponse.builder()
+                .matchId(view.getMatchId())
+                .title(view.getTitle())
+                .sportType(view.getSportType())
+                .matchDate(view.getMatchDate())
+                .locationName(view.getLocationName())
+                .latitude(view.getLatitude())
+                .longitude(view.getLongitude())
+                .maxPlayers(view.getMaxPlayers())
+                .currentPlayers(view.getCurrentPlayers())
+                .status(MatchStatus.valueOf(view.getStatus()))
+                .build();
     }
 
     private MatchResponse toResponse(Match match) {
