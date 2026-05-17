@@ -153,8 +153,7 @@ public class MatchService {
     }
 
     public MatchDetailResponse getMatch(Long matchId) {
-        Match match = matchingRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        Match match = getActiveMatch(matchId);
 
         List<MatchDetailResponse.MemberInfo> joinedMembers = matchParticipantRepository
                 .findByMatchAndStatus(match, ParticipantStatus.APPROVED)
@@ -166,6 +165,14 @@ public class MatchService {
                 .match(MatchDetailResponse.MatchInfo.from(match))
                 .joinedMembers(joinedMembers)
                 .build();
+    }
+
+    public List<MatchResponse> getMyMatches(Long memberId) {
+        return matchParticipantRepository
+                .findMyMatches(memberId, ParticipantStatus.APPROVED)
+                .stream()
+                .map(mp -> toResponse(mp.getMatch()))
+                .toList();
     }
 
     public List<MatchResponse> getMatches(Double latitude, Double longitude, Double radius,

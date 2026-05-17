@@ -1,9 +1,12 @@
 package com.playball.backend.domain.member.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import com.playball.backend.common.annotation.CurrentMemberId;
 import com.playball.backend.common.dto.ApiResponse;
+import com.playball.backend.domain.matches.dto.MatchResponse;
+import com.playball.backend.domain.matches.service.MatchService;
 import com.playball.backend.domain.member.dto.LocationUpdateRequest;
 import com.playball.backend.domain.member.dto.MemberDTO;
 import com.playball.backend.domain.member.dto.ProfileResponse;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final MatchService matchService;
 
     @Operation(summary = "회원가입 추가정보 입력")
     @PostMapping("/signup/complete")
@@ -45,6 +49,12 @@ public class MemberController {
     @GetMapping("/me")
     public ApiResponse<ProfileResponse> getMyProfile(@CurrentMemberId Long memberId) {
         return ApiResponse.ok("프로필 조회 성공", memberService.getMyProfile(memberId));
+    }
+
+    @Operation(summary = "내가 참가한 경기 목록 조회")
+    @GetMapping("/me/matches")
+    public ApiResponse<List<MatchResponse>> getMyMatches(@CurrentMemberId Long memberId) {
+        return ApiResponse.ok("내 경기 목록 조회 성공", matchService.getMyMatches(memberId));
     }
 
     @Operation(summary = "다른 회원 프로필 조회")
