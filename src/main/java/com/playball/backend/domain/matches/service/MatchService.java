@@ -20,7 +20,11 @@ import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
 import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
+import com.playball.backend.domain.matching.entity.MatchParticipant;
+import com.playball.backend.domain.matching.entity.ParticipantStatus;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
+import com.playball.backend.domain.member.entity.Member;
+import com.playball.backend.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,10 +35,12 @@ public class MatchService {
 
     private final MatchingRepository matchingRepository;
     private final MatchParticipantRepository matchParticipantRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
-    public MatchCreateResponse createMatch(MatchCreateRequest request) {
+    public MatchCreateResponse createMatch(MatchCreateRequest request, Long hostId) {
         Match match = Match.builder()
+                .hostId(hostId)
                 .title(request.getTitle())
                 .sportType(SportType.valueOf(request.getSportType()))
                 .matchDate(request.getMatchDate())
@@ -44,6 +50,8 @@ public class MatchService {
                 .address(request.getAddress())
                 .maxPlayers(request.getMaxPlayers())
                 .currentPlayers(1)
+                .gender(request.getGender())
+                .ageRange(request.getAgeRange())
                 .skillLevel(request.getSkillLevel())
                 .entryFee(request.getEntryFee())
                 .description(request.getDescription())
@@ -51,6 +59,15 @@ public class MatchService {
                 .build();
 
         Match saved = matchingRepository.save(match);
+
+        Member host = memberRepository.findById(hostId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        matchParticipantRepository.save(MatchParticipant.builder()
+                .match(saved)
+                .member(host)
+                .status(ParticipantStatus.APPROVED)
+                .build());
 
         return MatchCreateResponse.builder()
                 .matchId(saved.getId())
@@ -69,8 +86,11 @@ public class MatchService {
     }
 
     @Transactional
-    public MatchUpdateResponse updateMatch(Long matchId, MatchUpdateRequest request) {
+    public MatchUpdateResponse updateMatch(Long matchId, MatchUpdateRequest request, Long memberId) {
         Match match = getActiveMatch(matchId);
+        if (match.getHostId() == null || !match.getHostId().equals(memberId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
 
         match.update(
                 request.getTitle(),
@@ -94,6 +114,7 @@ public class MatchService {
     }
 
     public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
+        String gender = request.getGender() != null ? request.getGender().name() : null;
         return matchingRepository.findRandomMatch(
                 request.getLatitude(),
                 request.getLongitude(),
@@ -101,7 +122,9 @@ public class MatchService {
                 request.getSportType(),
                 request.getDate(),
                 request.getMaxFee(),
-                request.getSkillLevel()
+                request.getSkillLevel(),
+                gender,
+                request.getAgeRange()
         ).map(view -> RandomMatchResponse.builder()
                 .matchId(view.getMatchId())
                 .title(view.getTitle())
@@ -109,9 +132,11 @@ public class MatchService {
                 .matchDate(view.getMatchDate())
                 .locationName(view.getLocationName())
                 .entryFee(view.getEntryFee())
+                .currentPlayers(view.getCurrentPlayers())
+                .maxPlayers(view.getMaxPlayers())
                 .distance(view.getDistance())
                 .build()
-        ).orElse(null);
+        ).orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
     }
 
     public MatchDetailResponse getMatch(Long matchId) {
@@ -119,7 +144,7 @@ public class MatchService {
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
         List<MatchDetailResponse.MemberInfo> joinedMembers = matchParticipantRepository
-                .findByMatch(match)
+                .findByMatchAndStatus(match, ParticipantStatus.APPROVED)
                 .stream()
                 .map(p -> MatchDetailResponse.MemberInfo.from(p.getMember()))
                 .toList();
@@ -139,8 +164,11 @@ public class MatchService {
     }
 
     @Transactional
-    public void deleteMatch(Long matchId) {
+    public void deleteMatch(Long matchId, Long memberId) {
         Match match = getActiveMatch(matchId);
+        if (match.getHostId() == null || !match.getHostId().equals(memberId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
         match.markDeleted();
     }
 
@@ -164,6 +192,8 @@ public class MatchService {
                 .longitude(match.getLongitude())
                 .maxPlayers(match.getMaxPlayers())
                 .currentPlayers(match.getCurrentPlayers())
+                .gender(match.getGender())
+                .ageRange(match.getAgeRange())
                 .status(match.getStatus())
                 .updatedAt(match.getUpdatedAt())
                 .build();

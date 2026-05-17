@@ -27,8 +27,8 @@ public class MatchResponse {
     private Integer maxPlayers;
     private Integer currentPlayers;
 
-    // private String skillLevel;
-    // private Integer entryFee;
+    private String gender;
+    private Integer ageRange;
 
     private MatchStatus status;
 

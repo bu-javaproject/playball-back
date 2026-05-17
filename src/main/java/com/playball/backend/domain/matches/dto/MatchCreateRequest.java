@@ -37,6 +37,10 @@ public class MatchCreateRequest {
     @Min(1)
     private Integer maxPlayers; // 최대 인원
 
+    private String gender; // null=무관, "M"=남성, "F"=여성
+
+    private Integer ageRange; // null=무관, 예) 20=20대
+
     private SkillLevel skillLevel;
 
     @Builder.Default

@@ -9,5 +9,7 @@ public interface RandomMatchView {
     LocalDateTime getMatchDate();
     String getLocationName();
     Integer getEntryFee();
+    Integer getCurrentPlayers();
+    Integer getMaxPlayers();
     Double getDistance();
 }

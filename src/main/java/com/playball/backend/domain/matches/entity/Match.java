@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,6 +31,11 @@ public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
+
+    private Long hostId;
 
     private String title;
 
@@ -48,6 +54,10 @@ public class Match {
     private Integer maxPlayers;
 
     private Integer currentPlayers;
+
+    private String gender; // null=무관, "M"=남성, "F"=여성
+
+    private Integer ageRange; // null=무관, 예) 20=20대
 
     @Enumerated(EnumType.STRING)
     private MatchCreateRequest.SkillLevel skillLevel;
