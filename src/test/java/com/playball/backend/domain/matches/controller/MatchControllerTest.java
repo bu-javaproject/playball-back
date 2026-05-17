@@ -329,6 +329,18 @@ class MatchControllerTest {
                 .andExpect(jsonPath("$.message").value(ErrorCode.ALREADY_JOINED.getMessage()));
     }
 
+    @Test
+    @DisplayName("POST /api/matches/{matchId}/join — 삭제된 경기 409")
+    void joinMatch_삭제된경기_409() throws Exception {
+        given(matchingService.joinMatch(eq(MATCH_ID), eq(MEMBER_ID)))
+                .willThrow(new CustomException(ErrorCode.MATCH_DELETED));
+
+        mockMvc.perform(post("/api/matches/{matchId}/join", MATCH_ID))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MATCH_DELETED.getMessage()));
+    }
+
     // -------------------------------------------------------
     // 화면 ⑥: DELETE /api/matches/{matchId}/join — 참가 취소
     // -------------------------------------------------------

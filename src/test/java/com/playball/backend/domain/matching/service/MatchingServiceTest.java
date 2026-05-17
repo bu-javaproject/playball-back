@@ -121,6 +121,18 @@ class MatchingServiceTest {
                 .isEqualTo(ErrorCode.MATCH_NOT_FOUND);
     }
 
+    @Test
+    @DisplayName("삭제된 경기에 참가하면 MATCH_DELETED 예외가 발생한다")
+    void joinMatch_삭제된경기_예외() {
+        Match match = matchOf(3, 10, MatchStatus.DELETED);
+        given(matchRepository.findById(MATCH_ID)).willReturn(Optional.of(match));
+
+        assertThatThrownBy(() -> matchingService.joinMatch(MATCH_ID, MEMBER_ID))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.MATCH_DELETED);
+    }
+
     // -------------------------------------------------------
     // 헬퍼
     // -------------------------------------------------------
