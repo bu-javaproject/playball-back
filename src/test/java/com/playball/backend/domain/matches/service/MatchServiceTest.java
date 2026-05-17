@@ -2,9 +2,14 @@ package com.playball.backend.domain.matches.service;
 
 import com.playball.backend.common.exception.CustomException;
 import com.playball.backend.common.exception.ErrorCode;
+import com.playball.backend.domain.matches.dto.MatchResponse;
+import com.playball.backend.domain.matches.dto.NearbyMatchView;
 import com.playball.backend.domain.matches.dto.RandomMatchRequest;
 import com.playball.backend.domain.matches.dto.RandomMatchResponse;
 import com.playball.backend.domain.matches.dto.RandomMatchView;
+import com.playball.backend.domain.matches.entity.Match;
+import com.playball.backend.domain.matches.entity.MatchStatus;
+import com.playball.backend.domain.matches.entity.SportType;
 import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
 import com.playball.backend.domain.member.repository.MemberRepository;
@@ -16,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -144,8 +150,89 @@ class MatchServiceTest {
     }
 
     // -------------------------------------------------------
+    // 화면 ③: GET /api/matches?lat=&lng= — 지도 경기 목록
+    // -------------------------------------------------------
+
+    @Test
+    @DisplayName("위치 제공 시 반경 내 경기 목록을 거리순으로 반환한다")
+    void getMatches_위치기반_결과반환() {
+        NearbyMatchView view = nearbyViewStub(1L, "목동 풋살장", "SOCCER", 3, 10);
+        given(matchingRepository.findNearbyMatches(eq(37.5263), eq(126.8967), eq(5.0), isNull()))
+                .willReturn(List.of(view));
+
+        List<MatchResponse> result = matchService.getMatches(37.5263, 126.8967, 5.0, null, 0, 10);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getMatchId()).isEqualTo(1L);
+        assertThat(result.get(0).getSportType()).isEqualTo("SOCCER");
+        assertThat(result.get(0).getLatitude()).isEqualTo(37.5263);
+    }
+
+    @Test
+    @DisplayName("반경 내 경기가 없으면 빈 리스트를 반환한다")
+    void getMatches_결과없음_빈리스트반환() {
+        given(matchingRepository.findNearbyMatches(any(), any(), any(), any()))
+                .willReturn(List.of());
+
+        List<MatchResponse> result = matchService.getMatches(37.5263, 126.8967, 1.0, null, 0, 10);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("sportType 필터가 findNearbyMatches에 전달된다")
+    void getMatches_sportType_필터_전달() {
+        NearbyMatchView view = nearbyViewStub(2L, "농구장", "BASKETBALL", 2, 8);
+        given(matchingRepository.findNearbyMatches(any(), any(), any(), eq("BASKETBALL")))
+                .willReturn(List.of(view));
+
+        List<MatchResponse> result = matchService.getMatches(37.5263, 126.8967, 5.0, "BASKETBALL", 0, 10);
+
+        assertThat(result.get(0).getSportType()).isEqualTo("BASKETBALL");
+    }
+
+    @Test
+    @DisplayName("위치 없으면 페이지네이션으로 전체 목록을 반환한다")
+    void getMatches_위치없으면_페이지네이션사용() {
+        Match match = Match.builder()
+                .id(1L)
+                .title("목동 풋살")
+                .sportType(SportType.SOCCER)
+                .locationName("서울 목동운동장")
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .currentPlayers(3)
+                .status(MatchStatus.OPEN)
+                .build();
+        given(matchingRepository.findByStatusNot(eq(MatchStatus.DELETED), any()))
+                .willReturn(List.of(match));
+
+        List<MatchResponse> result = matchService.getMatches(null, null, 5.0, null, 0, 10);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getMatchId()).isEqualTo(1L);
+    }
+
+    // -------------------------------------------------------
     // 헬퍼
     // -------------------------------------------------------
+
+    private NearbyMatchView nearbyViewStub(Long id, String locationName, String sportType,
+                                           int current, int max) {
+        NearbyMatchView view = mock(NearbyMatchView.class);
+        given(view.getMatchId()).willReturn(id);
+        given(view.getTitle()).willReturn("테스트 경기");
+        given(view.getSportType()).willReturn(sportType);
+        given(view.getMatchDate()).willReturn(LocalDateTime.now().plusDays(1));
+        given(view.getLocationName()).willReturn(locationName);
+        given(view.getLatitude()).willReturn(37.5263);
+        given(view.getLongitude()).willReturn(126.8967);
+        given(view.getMaxPlayers()).willReturn(max);
+        given(view.getCurrentPlayers()).willReturn(current);
+        given(view.getStatus()).willReturn("OPEN");
+        return view;
+    }
 
     private RandomMatchView viewStub(Long id, String locationName, String sportType,
                                      int current, int max, double distance) {

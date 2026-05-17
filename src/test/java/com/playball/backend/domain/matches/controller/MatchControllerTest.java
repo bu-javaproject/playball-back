@@ -10,8 +10,11 @@ import com.playball.backend.common.resolver.CurrentMemberIdArgumentResolver;
 import com.playball.backend.domain.matching.dto.MatchedResponse;
 import com.playball.backend.domain.matching.service.MatchRealtimeService;
 import com.playball.backend.domain.matching.service.MatchingService;
+import com.playball.backend.domain.matches.dto.MatchDetailResponse;
+import com.playball.backend.domain.matches.dto.MatchResponse;
 import com.playball.backend.domain.matches.dto.RandomMatchRequest;
 import com.playball.backend.domain.matches.dto.RandomMatchResponse;
+import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.service.MatchService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,11 +35,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -75,6 +80,129 @@ class MatchControllerTest {
     @AfterEach
     void clearAuth() {
         SecurityContextHolder.clearContext();
+    }
+
+    // -------------------------------------------------------
+    // 화면 ③: GET /api/matches?lat=&lng= — 지도 경기 목록
+    // -------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/matches?lat=&lng= — 위치 기반 경기 목록 200")
+    void getMatches_위치기반_200() throws Exception {
+        List<MatchResponse> responses = List.of(
+                MatchResponse.builder()
+                        .matchId(MATCH_ID)
+                        .title("목동 풋살")
+                        .sportType("SOCCER")
+                        .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                        .locationName("서울 목동운동장")
+                        .latitude(37.5263)
+                        .longitude(126.8967)
+                        .maxPlayers(10)
+                        .currentPlayers(3)
+                        .status(MatchStatus.OPEN)
+                        .build()
+        );
+        given(matchService.getMatches(any(), any(), any(), any(), anyInt(), anyInt()))
+                .willReturn(responses);
+
+        mockMvc.perform(get("/api/matches")
+                        .param("latitude", "37.5263")
+                        .param("longitude", "126.8967"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].matchId").value(MATCH_ID.intValue()))
+                .andExpect(jsonPath("$.data[0].sportType").value("SOCCER"))
+                .andExpect(jsonPath("$.data[0].latitude").value(37.5263))
+                .andExpect(jsonPath("$.data[0].currentPlayers").value(3));
+    }
+
+    @Test
+    @DisplayName("GET /api/matches?lat=&lng= — 반경 내 경기 없을 때 빈 배열 200")
+    void getMatches_빈결과_200() throws Exception {
+        given(matchService.getMatches(any(), any(), any(), any(), anyInt(), anyInt()))
+                .willReturn(List.of());
+
+        mockMvc.perform(get("/api/matches")
+                        .param("latitude", "37.5263")
+                        .param("longitude", "126.8967"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/matches?sportType=SOCCER — sportType 필터 포함 200")
+    void getMatches_sportType_필터_200() throws Exception {
+        List<MatchResponse> responses = List.of(
+                MatchResponse.builder()
+                        .matchId(MATCH_ID)
+                        .sportType("SOCCER")
+                        .latitude(37.5263)
+                        .longitude(126.8967)
+                        .status(MatchStatus.OPEN)
+                        .build()
+        );
+        given(matchService.getMatches(any(), any(), any(), eq("SOCCER"), anyInt(), anyInt()))
+                .willReturn(responses);
+
+        mockMvc.perform(get("/api/matches")
+                        .param("latitude", "37.5263")
+                        .param("longitude", "126.8967")
+                        .param("sportType", "SOCCER"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].sportType").value("SOCCER"));
+    }
+
+    // -------------------------------------------------------
+    // 화면 ④: GET /api/matches/{matchId} — 경기 상세
+    // -------------------------------------------------------
+
+    @Test
+    @DisplayName("GET /api/matches/{matchId} — 정상 상세 조회 200")
+    void getMatch_상세조회_200() throws Exception {
+        MatchDetailResponse.MatchInfo matchInfo = MatchDetailResponse.MatchInfo.builder()
+                .matchId(MATCH_ID)
+                .title("목동 풋살")
+                .sportType("SOCCER")
+                .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                .locationName("서울 목동운동장")
+                .latitude(37.5263)
+                .longitude(126.8967)
+                .maxPlayers(10)
+                .currentPlayers(3)
+                .entryFee(5000)
+                .status(MatchStatus.OPEN)
+                .build();
+        MatchDetailResponse response = MatchDetailResponse.builder()
+                .match(matchInfo)
+                .joinedMembers(List.of())
+                .build();
+        given(matchService.getMatch(eq(MATCH_ID))).willReturn(response);
+
+        mockMvc.perform(get("/api/matches/{matchId}", MATCH_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.match.matchId").value(MATCH_ID.intValue()))
+                .andExpect(jsonPath("$.data.match.title").value("목동 풋살"))
+                .andExpect(jsonPath("$.data.match.sportType").value("SOCCER"))
+                .andExpect(jsonPath("$.data.match.currentPlayers").value(3))
+                .andExpect(jsonPath("$.data.match.entryFee").value(5000))
+                .andExpect(jsonPath("$.data.joinedMembers").isArray());
+    }
+
+    @Test
+    @DisplayName("GET /api/matches/{matchId} — 존재하지 않는 경기 404")
+    void getMatch_존재하지않음_404() throws Exception {
+        given(matchService.getMatch(eq(MATCH_ID)))
+                .willThrow(new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        mockMvc.perform(get("/api/matches/{matchId}", MATCH_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(ErrorCode.MATCH_NOT_FOUND.getMessage()));
     }
 
     // -------------------------------------------------------
