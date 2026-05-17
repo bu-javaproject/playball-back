@@ -21,9 +21,12 @@ import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
 import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
 import com.playball.backend.domain.matches.service.MatchService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "경기", description = "경기 생성 / 조회 / 수정 / 삭제 API")
 @RestController
 @RequestMapping("/api/matches")
 @RequiredArgsConstructor
@@ -31,54 +34,38 @@ public class MatchController {
 
     private final MatchService matchService;
 
-    // 경기 상세 조회
+    @Operation(summary = "경기 상세 조회")
     @GetMapping("/{matchId}")
-    public ApiResponse<MatchDetailResponse> getMatch(
-            @PathVariable("matchId") Long matchId) {
-        MatchDetailResponse response = matchService.getMatch(matchId);
-        return ApiResponse.ok("경기 조회 성공", response);
+    public ApiResponse<MatchDetailResponse> getMatch(@PathVariable Long matchId) {
+        return ApiResponse.ok("경기 조회 성공", matchService.getMatch(matchId));
     }
 
-    // 경기 목록 조회
+    @Operation(summary = "경기 목록 조회")
     @GetMapping
     public ApiResponse<List<MatchResponse>> getMatches(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
-        List<MatchResponse> response = matchService.getMatches(page, size);
-        return ApiResponse.ok("경기 목록 조회 성공", response);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.ok("경기 목록 조회 성공", matchService.getMatches(page, size));
     }
 
-    // 경기 생성
+    @Operation(summary = "경기 생성")
     @PostMapping
-    public ApiResponse<MatchCreateResponse> createMatch(
-            @Valid @RequestBody MatchCreateRequest request) {
-        MatchCreateResponse response = matchService.createMatch(request);
-        return ApiResponse.ok("경기 생성 성공", response);
+    public ApiResponse<MatchCreateResponse> createMatch(@Valid @RequestBody MatchCreateRequest request) {
+        return ApiResponse.ok("경기 생성 성공", matchService.createMatch(request));
     }
 
-    // 경기 수정
+    @Operation(summary = "경기 수정")
     @PatchMapping("/{matchId}")
     public ApiResponse<MatchUpdateResponse> updateMatch(
-            @PathVariable("matchId") Long matchId,
+            @PathVariable Long matchId,
             @RequestBody MatchUpdateRequest request) {
-        MatchUpdateResponse updatedMatch = matchService.updateMatch(matchId, request);
-        return ApiResponse.ok("경기 수정 성공", updatedMatch);
+        return ApiResponse.ok("경기 수정 성공", matchService.updateMatch(matchId, request));
     }
 
-    // 경기 삭제
+    @Operation(summary = "경기 삭제")
     @DeleteMapping("/{matchId}")
-    public ApiResponse<Void> deleteMatch(@PathVariable("matchId") Long matchId) {
+    public ApiResponse<Void> deleteMatch(@PathVariable Long matchId) {
         matchService.deleteMatch(matchId);
         return ApiResponse.ok("경기가 삭제되었습니다", null);
     }
-
-    // // 랜덤 매칭 요청
-    // @PostMapping("/random")
-    // public ApiResponse<RandomMatchResponse> getRandomMatch(
-    // @Valid @RequestBody RandomMatchRequest request
-    // ) {
-    // RandomMatchResponse response = matchService.findRandomMatch(request);
-    // return ApiResponse.ok("랜덤 매칭 성공", response);
-    // }
-
 }

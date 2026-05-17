@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
-import com.playball.backend.member.entity.Member;
+import com.playball.backend.domain.member.entity.Member;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

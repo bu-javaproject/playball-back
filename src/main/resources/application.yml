@@ -9,10 +9,11 @@ jwt:
 
 springdoc:
   swagger-ui:
-    enabled: true             ← true 인지 확인
+    enabled: true            # ← true 인지 확인
     path: /swagger-ui.html
 
 # 카카오 OAuth URL (API 키는 application-secret.yml에)
 kakao:
   token-uri: https://kauth.kakao.com/oauth/token
   user-info-uri: https://kapi.kakao.com/v2/user/me
+  redirect-uri: http://localhost:5173/oauth/kakao/callback

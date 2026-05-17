@@ -4,7 +4,7 @@ package com.playball.backend.domain.matching.entity;
 import java.time.LocalDateTime;
 
 import com.playball.backend.domain.matches.entity.Match;
-import com.playball.backend.member.entity.Member;
+import com.playball.backend.domain.member.entity.Member;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

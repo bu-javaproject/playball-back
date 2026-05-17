@@ -5,8 +5,9 @@ import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
-import com.playball.backend.member.entity.Member;
-import com.playball.backend.member.repository.MemberRepository;
+import com.playball.backend.domain.member.entity.Member;
+import com.playball.backend.domain.member.repository.MemberRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

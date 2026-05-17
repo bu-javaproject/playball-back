@@ -20,10 +20,8 @@ import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
 import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
-import com.playball.backend.domain.matching.entity.MatchParticipant;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -118,7 +116,7 @@ public class MatchService {
 
     public MatchDetailResponse getMatch(Long matchId) {
         Match match = matchingRepository.findById(matchId)
-                .orElseThrow(() -> new EntityNotFoundException("경기를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
         List<MatchDetailResponse.MemberInfo> joinedMembers = matchParticipantRepository
                 .findByMatch(match)
