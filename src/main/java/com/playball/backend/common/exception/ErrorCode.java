@@ -32,6 +32,7 @@ public enum ErrorCode {
     MATCH_FULL(HttpStatus.CONFLICT, "경기 인원이 꽉 찼습니다."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참가한 경기입니다."),
     MATCH_DELETED(HttpStatus.CONFLICT, "이미 삭제된 경기입니다."),
+    MATCH_JOIN_CONFLICT(HttpStatus.CONFLICT, "다른 사용자가 동시에 참가 중입니다. 다시 시도해주세요."),
 
     // 칭찬
     SELF_COMPLIMENT(HttpStatus.BAD_REQUEST, "자기 자신은 칭찬할 수 없습니다."),
