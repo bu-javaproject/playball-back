@@ -96,7 +96,7 @@ class MatchControllerTest {
                 .distance(1500.0)
                 .build();
 
-        given(matchService.findRandomMatch(any())).willReturn(response);
+        given(matchService.findRandomMatch(any(), any())).willReturn(response);
 
         RandomMatchRequest request = RandomMatchRequest.builder()
                 .latitude(37.5263)
@@ -120,7 +120,7 @@ class MatchControllerTest {
     @Test
     @DisplayName("POST /api/matches/random — 조건에 맞는 경기 없을 때 404")
     void findRandomMatch_경기없음_404() throws Exception {
-        given(matchService.findRandomMatch(any()))
+        given(matchService.findRandomMatch(any(), any()))
                 .willThrow(new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
         RandomMatchRequest request = RandomMatchRequest.builder()

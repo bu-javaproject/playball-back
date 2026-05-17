@@ -104,6 +104,6 @@ public class MatchController {
     public ApiResponse<RandomMatchResponse> findRandomMatch(
             @CurrentMemberId Long memberId,
             @Valid @RequestBody RandomMatchRequest request) {
-        return ApiResponse.ok("랜덤 매칭 성공", matchService.findRandomMatch(request));
+        return ApiResponse.ok("랜덤 매칭 성공", matchService.findRandomMatch(request, memberId));
     }
 }

@@ -113,7 +113,7 @@ public class MatchService {
                 .build();
     }
 
-    public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
+    public RandomMatchResponse findRandomMatch(RandomMatchRequest request, Long memberId) {
         String gender = request.getGender() != null ? request.getGender().name() : null;
         return matchingRepository.findRandomMatch(
                 request.getLatitude(),
@@ -124,7 +124,8 @@ public class MatchService {
                 request.getMaxFee(),
                 request.getSkillLevel(),
                 gender,
-                request.getAgeRange()
+                request.getAgeRange(),
+                memberId
         ).map(view -> RandomMatchResponse.builder()
                 .matchId(view.getMatchId())
                 .title(view.getTitle())

@@ -47,6 +47,12 @@ public interface MatchingRepository extends JpaRepository<Match, Long> {
                   AND (:skillLevel IS NULL OR skill_level = :skillLevel)
                   AND (:gender IS NULL OR gender = :gender)
                   AND (:ageRange IS NULL OR age_range = :ageRange)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM match_participant mp
+                      WHERE mp.match_id = matches.id
+                        AND mp.member_id = :memberId
+                        AND mp.status IN ('PENDING', 'APPROVED')
+                  )
             ) t
             WHERE t.distance <= :radius
             ORDER BY RAND()
@@ -61,6 +67,7 @@ public interface MatchingRepository extends JpaRepository<Match, Long> {
             @Param("maxFee") Integer maxFee,
             @Param("skillLevel") String skillLevel,
             @Param("gender") String gender,
-            @Param("ageRange") Integer ageRange
+            @Param("ageRange") Integer ageRange,
+            @Param("memberId") Long memberId
     );
 }
