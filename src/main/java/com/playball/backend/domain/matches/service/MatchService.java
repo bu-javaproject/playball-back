@@ -104,6 +104,10 @@ public class MatchService {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
+        if (request.getMaxPlayers() != null && request.getMaxPlayers() < match.getCurrentPlayers()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+
         match.update(
                 request.getTitle(),
                 request.getMatchDate(),

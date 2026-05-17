@@ -10,6 +10,8 @@ import com.playball.backend.domain.compliment.enums.ComplimentTag;
 import com.playball.backend.domain.compliment.repository.ComplimentRepository;
 import com.playball.backend.domain.compliment.repository.ComplimentTagRepository;
 import com.playball.backend.domain.compliment.repository.MemberComplimentSummaryRepository;
+import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
+import com.playball.backend.domain.matching.entity.ParticipantStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +33,17 @@ public class ComplimentService {
     private final ComplimentRepository complimentRepository;
     private final ComplimentTagRepository complimentTagRepository;
     private final MemberComplimentSummaryRepository summaryRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     @Transactional
     public int submitBulkCompliments(Long raterId, Long matchId, ComplimentBulkRequest request) {
         List<ComplimentSubmitItem> items = request.getCompliments();
+
+        // 칭찬하는 사람이 경기 참가자인지 확인
+        if (!matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
+                matchId, raterId, List.of(ParticipantStatus.APPROVED))) {
+            throw new CustomException(ErrorCode.NOT_A_PARTICIPANT);
+        }
 
         // 같은 batch 안 중복 rateeId 체크
         Set<Long> rateeIds = items.stream()
@@ -45,6 +54,11 @@ public class ComplimentService {
         }
 
         for (ComplimentSubmitItem item : items) {
+            // 칭찬받는 사람이 경기 참가자인지 확인
+            if (!matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
+                    matchId, item.getRateeId(), List.of(ParticipantStatus.APPROVED))) {
+                throw new CustomException(ErrorCode.NOT_A_PARTICIPANT);
+            }
             if (raterId.equals(item.getRateeId())) {
                 throw new CustomException(ErrorCode.SELF_COMPLIMENT);
             }

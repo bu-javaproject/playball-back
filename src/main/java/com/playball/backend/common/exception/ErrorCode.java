@@ -31,8 +31,10 @@ public enum ErrorCode {
     MATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 경기입니다."),
     MATCH_FULL(HttpStatus.CONFLICT, "경기 인원이 꽉 찼습니다."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참가한 경기입니다."),
-    MATCH_DELETED(HttpStatus.CONFLICT, "이미 삭제된 경기입니다."),
+    MATCH_DELETED(HttpStatus.NOT_FOUND, "이미 삭제된 경기입니다."),
     MATCH_JOIN_CONFLICT(HttpStatus.CONFLICT, "다른 사용자가 동시에 참가 중입니다. 다시 시도해주세요."),
+    NOT_JOINED(HttpStatus.BAD_REQUEST, "참가하지 않은 경기입니다."),
+    NOT_A_PARTICIPANT(HttpStatus.FORBIDDEN, "경기에 참가하지 않은 회원입니다."),
 
     // 칭찬
     SELF_COMPLIMENT(HttpStatus.BAD_REQUEST, "자기 자신은 칭찬할 수 없습니다."),

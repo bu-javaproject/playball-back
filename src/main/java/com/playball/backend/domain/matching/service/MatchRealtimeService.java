@@ -5,6 +5,8 @@ import com.playball.backend.common.exception.ErrorCode;
 import com.playball.backend.domain.matching.dto.MatchRealtimeResponse;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
+import com.playball.backend.domain.matching.entity.MatchParticipant;
+import com.playball.backend.domain.matching.entity.ParticipantStatus;
 import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +25,16 @@ public class MatchRealtimeService {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
-        matchParticipantRepository
+        if (match.getStatus() == MatchStatus.DELETED) {
+            throw new CustomException(ErrorCode.MATCH_DELETED);
+        }
+
+        MatchParticipant participant = matchParticipantRepository
                 .findByMatch_IdAndMember_MemberId(matchId, userId)
-                .ifPresent(p -> p.cancel());
+                .filter(p -> p.getStatus() == ParticipantStatus.APPROVED)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_JOINED));
+
+        participant.cancel();
 
         int updatedPlayers = Math.max(0, match.getCurrentPlayers() - 1);
         MatchStatus updatedStatus = updatedPlayers < match.getMaxPlayers()

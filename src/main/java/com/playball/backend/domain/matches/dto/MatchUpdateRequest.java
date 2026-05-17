@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 
@@ -17,6 +18,7 @@ public class MatchUpdateRequest {
 
     private String title;
 
+    @FutureOrPresent
     private LocalDateTime matchDate;
 
     @Min(1)

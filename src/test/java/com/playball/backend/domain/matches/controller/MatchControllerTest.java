@@ -444,13 +444,13 @@ class MatchControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/matches/{matchId}/join — 삭제된 경기 409")
-    void joinMatch_삭제된경기_409() throws Exception {
+    @DisplayName("POST /api/matches/{matchId}/join — 삭제된 경기 404")
+    void joinMatch_삭제된경기_404() throws Exception {
         given(matchingService.joinMatch(eq(MATCH_ID), eq(MEMBER_ID)))
                 .willThrow(new CustomException(ErrorCode.MATCH_DELETED));
 
         mockMvc.perform(post("/api/matches/{matchId}/join", MATCH_ID))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value(ErrorCode.MATCH_DELETED.getMessage()));
     }
