@@ -28,6 +28,11 @@ public class MemberComplimentSummary {
 
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
