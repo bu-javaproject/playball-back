@@ -40,7 +40,7 @@ public class MemberService {
                 request.getLatitude(),
                 request.getLongitude(),
                 request.getSkillLevel() != null ? request.getSkillLevel() : "BEGINNER",
-                request.getPreferedPosition()
+                request.getPreferredPosition()
         );
 
         if (request.getFavoriteSports() != null) {
