@@ -24,3 +24,4 @@ springdoc:
 kakao:
   token-uri: https://kauth.kakao.com/oauth/token
   user-info-uri: https://kapi.kakao.com/v2/user/me
+  redirect-uri: http://localhost:5173/oauth/kakao/callback

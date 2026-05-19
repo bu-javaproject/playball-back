@@ -1,6 +1,5 @@
 package com.playball.backend.config;
 
-import com.playball.backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,10 +7,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionCreationEvent;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import com.playball.backend.domain.auth.jwt.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -21,7 +20,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 //1.csrf 보호 끄기
                 .csrf(csrf -> csrf.disable())
@@ -48,6 +47,9 @@ public class SecurityConfig {
                         .permitAll()
                         //WebSocket 연결
                         .requestMatchers("/ws/**")
+                        .permitAll()
+                        //정적 리소스 (테스트 HTML 등)
+                        .requestMatchers("/*.html", "/static/**")
                         .permitAll()
                         //나머지는 인증 필요
                         .anyRequest().authenticated()

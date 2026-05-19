@@ -1,24 +1,36 @@
 package com.playball.backend.domain.matches.service;
 
-import com.playball.backend.common.exception.CustomException;
-import com.playball.backend.common.exception.ErrorCode;
-import com.playball.backend.domain.matches.dto.*;
-import com.playball.backend.domain.matches.entity.Match;
-import com.playball.backend.domain.matches.entity.MatchStatus;
-import com.playball.backend.domain.matches.entity.SportType;
-import com.playball.backend.domain.matches.repository.MatchRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.playball.backend.common.exception.CustomException;
+import com.playball.backend.common.exception.ErrorCode;
+import com.playball.backend.domain.matches.dto.MatchCreateRequest;
+import com.playball.backend.domain.matches.dto.MatchCreateResponse;
+import com.playball.backend.domain.matches.dto.MatchDetailResponse;
+import com.playball.backend.domain.matches.dto.MatchResponse;
+import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
+import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
+import com.playball.backend.domain.matches.dto.RandomMatchRequest;
+import com.playball.backend.domain.matches.dto.RandomMatchResponse;
+import com.playball.backend.domain.matches.entity.Match;
+import com.playball.backend.domain.matches.entity.MatchStatus;
+import com.playball.backend.domain.matches.entity.SportType;
+import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
+import com.playball.backend.domain.matching.repository.MatchingRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MatchService {
 
-    private final MatchRepository matchRepository;
+    private final MatchingRepository matchingRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     @Transactional
     public MatchCreateResponse createMatch(MatchCreateRequest request) {
@@ -38,35 +50,35 @@ public class MatchService {
                 .status(MatchStatus.OPEN)
                 .build();
 
-        matchRepository.save(match);
+        Match saved = matchingRepository.save(match);
 
         return MatchCreateResponse.builder()
-                .matchId(match.getId())
-                .title(match.getTitle())
-                .sportType(match.getSportType().name())
-                .matchDate(match.getMatchDate())
-                .locationName(match.getLocationName())
-                .latitude(match.getLatitude())
-                .longitude(match.getLongitude())
-                .maxPlayers(match.getMaxPlayers())
-                .currentPlayers(match.getCurrentPlayers())
-                .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
-                .entryFee(match.getEntryFee())
+                .matchId(saved.getId())
+                .title(saved.getTitle())
+                .sportType(saved.getSportType().name())
+                .matchDate(saved.getMatchDate())
+                .locationName(saved.getLocationName())
+                .latitude(saved.getLatitude())
+                .longitude(saved.getLongitude())
+                .maxPlayers(saved.getMaxPlayers())
+                .currentPlayers(saved.getCurrentPlayers())
+                .skillLevel(saved.getSkillLevel() != null ? saved.getSkillLevel().name() : null)
+                .entryFee(saved.getEntryFee())
                 .status(MatchStatus.OPEN)
                 .build();
     }
 
     @Transactional
     public MatchUpdateResponse updateMatch(Long matchId, MatchUpdateRequest request) {
-        Match match = findActiveMatchOrThrow(matchId);
+        Match match = getActiveMatch(matchId);
 
-        if (request.getTitle() != null) match.setTitle(request.getTitle());
-        if (request.getMatchDate() != null) match.setMatchDate(request.getMatchDate());
-        if (request.getMaxPlayers() != null) match.setMaxPlayers(request.getMaxPlayers());
-        if (request.getEntryFee() != null) match.setEntryFee(request.getEntryFee());
-        if (request.getDescription() != null) match.setDescription(request.getDescription());
-
-        matchRepository.save(match);
+        match.update(
+                request.getTitle(),
+                request.getMatchDate(),
+                request.getMaxPlayers(),
+                request.getEntryFee(),
+                request.getDescription()
+        );
 
         return MatchUpdateResponse.builder()
                 .matchId(match.getId())
@@ -81,63 +93,78 @@ public class MatchService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
-    public MatchResponse getMatch(Long matchId) {
-        return toResponse(findActiveMatchOrThrow(matchId));
+    public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
+        return matchingRepository.findRandomMatch(
+                request.getLatitude(),
+                request.getLongitude(),
+                request.getRadius(),
+                request.getSportType(),
+                request.getDate(),
+                request.getMaxFee(),
+                request.getSkillLevel()
+        ).map(view -> RandomMatchResponse.builder()
+                .matchId(view.getMatchId())
+                .title(view.getTitle())
+                .sportType(view.getSportType())
+                .matchDate(view.getMatchDate())
+                .locationName(view.getLocationName())
+                .entryFee(view.getEntryFee())
+                .distance(view.getDistance())
+                .build()
+        ).orElse(null);
+    }
+
+    public MatchDetailResponse getMatch(Long matchId) {
+        Match match = matchingRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        List<MatchDetailResponse.MemberInfo> joinedMembers = matchParticipantRepository
+                .findByMatch(match)
+                .stream()
+                .map(p -> MatchDetailResponse.MemberInfo.from(p.getMember()))
+                .toList();
+
+        return MatchDetailResponse.builder()
+                .match(MatchDetailResponse.MatchInfo.from(match))
+                .joinedMembers(joinedMembers)
+                .build();
     }
 
     @Transactional(readOnly = true)
     public List<MatchResponse> getMatches(int page, int size) {
-        return matchRepository.findByStatusNotOrderByMatchDateDesc(
-                        MatchStatus.DELETED, PageRequest.of(page, size))
-                .stream().map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
-        String skillLevel = request.getSkillLevel() != null ? String.valueOf(request.getSkillLevel()) : null;
-
-        return matchRepository.findRandomMatch(
-                        request.getLatitude(), request.getLongitude(),
-                        request.getSportType(), request.getDate(),
-                        request.getMaxFee(), skillLevel, request.getRadius())
-                .map(row -> RandomMatchResponse.builder()
-                        .matchId(((Number) row[0]).longValue())
-                        .title((String) row[4])
-                        .sportType((String) row[5])
-                        .matchDate(((java.sql.Timestamp) row[6]).toLocalDateTime())
-                        .locationName((String) row[8])
-                        .entryFee(row[13] != null ? ((Number) row[13]).intValue() : null)
-                        .distance(((Number) row[row.length - 1]).doubleValue())
-                        .build())
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        return matchingRepository
+                .findByStatusNot(MatchStatus.DELETED, PageRequest.of(page, size))
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
     public void deleteMatch(Long matchId) {
-        Match match = findActiveMatchOrThrow(matchId);
-        match.setStatus(MatchStatus.DELETED);
-        matchRepository.save(match);
+        Match match = getActiveMatch(matchId);
+        match.markDeleted();
     }
 
-    private Match findActiveMatchOrThrow(Long matchId) {
-        return matchRepository.findByIdAndStatusNot(matchId, MatchStatus.DELETED)
+    private Match getActiveMatch(Long matchId) {
+        Match match = matchingRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        if (match.getStatus() == MatchStatus.DELETED) {
+            throw new CustomException(ErrorCode.MATCH_NOT_FOUND);
+        }
+        return match;
     }
 
     private MatchResponse toResponse(Match match) {
         return MatchResponse.builder()
                 .matchId(match.getId())
                 .title(match.getTitle())
-                .sportType(match.getSportType().name())
+                .sportType(match.getSportType() != null ? match.getSportType().name() : null)
                 .matchDate(match.getMatchDate())
                 .locationName(match.getLocationName())
                 .latitude(match.getLatitude())
                 .longitude(match.getLongitude())
                 .maxPlayers(match.getMaxPlayers())
                 .currentPlayers(match.getCurrentPlayers())
-                .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
-                .entryFee(match.getEntryFee())
                 .status(match.getStatus())
                 .updatedAt(match.getUpdatedAt())
                 .build();
