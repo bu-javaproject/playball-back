@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "인증", description = "카카오 로그인 / 토큰 재발급 / 로그아웃 API")
@@ -23,6 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @Operation(hidden = true)
+    @GetMapping("/kakao/callback")
+    public ApiResponse<KakaoLoginResponse> kakaoCallback(@RequestParam String code) {
+        KakaoLoginResponse response = authService.kakaoLogin(code);
+        String message = response.isNewUser() ? "추가 정보 입력이 필요합니다" : "로그인 성공";
+        return ApiResponse.ok(message, response);
+    }
 
     @Operation(summary = "카카오 로그인",
             description = "카카오 인가코드로 로그인합니다. 신규 회원이면 isNewUser:true를 반환합니다.")
