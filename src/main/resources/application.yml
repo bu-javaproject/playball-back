@@ -1,12 +1,14 @@
 spring:
   profiles:
     active: dev, secret    # dev + secret 프로필을 동시에 활성화
-
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.playball
-  configuration:
-    map-underscore-to-camel-case: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
 
 # JWT 토큰 만료 시간 (비밀키는 application-secret.yml에)
 jwt:
@@ -15,7 +17,7 @@ jwt:
 
 springdoc:
   swagger-ui:
-    enabled: true             ← true 인지 확인
+    enabled: true
     path: /swagger-ui.html
 
 # 카카오 OAuth URL (API 키는 application-secret.yml에)

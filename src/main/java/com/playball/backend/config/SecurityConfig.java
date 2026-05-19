@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
                         .permitAll()
                         //인증 API (카카오 로그인, 토큰 재발급)
-                        .requestMatchers("/api/auth/kakao", "/api/auth/refresh")
+                        .requestMatchers("/api/auth/kakao", "/api/auth/refresh", "/api/auth/kakao/callback")
                         .permitAll()
                         //닉네임 중복 확인 (비로그인도 가능)
                         .requestMatchers("/api/members/check-nickname")

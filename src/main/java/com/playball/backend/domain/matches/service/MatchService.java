@@ -1,33 +1,27 @@
 package com.playball.backend.domain.matches.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.playball.backend.common.exception.CustomException;
 import com.playball.backend.common.exception.ErrorCode;
-import com.playball.backend.domain.matches.dto.MatchCreateRequest;
-import com.playball.backend.domain.matches.dto.MatchCreateResponse;
-import com.playball.backend.domain.matches.dto.MatchResponse;
-import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
-import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
-import com.playball.backend.domain.matches.dto.RandomMatchRequest;
-import com.playball.backend.domain.matches.dto.RandomMatchResponse;
+import com.playball.backend.domain.matches.dto.*;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
-import com.playball.backend.domain.matches.mapper.MatchMapper;
-
+import com.playball.backend.domain.matches.repository.MatchRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class MatchService {
 
-    private final MatchMapper matchMapper;
+    private final MatchRepository matchRepository;
 
-    // 경기 생성
+    @Transactional
     public MatchCreateResponse createMatch(MatchCreateRequest request) {
-
         Match match = Match.builder()
                 .title(request.getTitle())
                 .sportType(SportType.valueOf(request.getSportType()))
@@ -44,41 +38,36 @@ public class MatchService {
                 .status(MatchStatus.OPEN)
                 .build();
 
-        matchMapper.insertMatch(match);
+        matchRepository.save(match);
 
         return MatchCreateResponse.builder()
-            .matchId(match.getId())
-            .title(match.getTitle())
-            .sportType(match.getSportType().name())
-            .matchDate(match.getMatchDate())
-            .locationName(match.getLocationName())
-            .latitude(match.getLatitude())
-            .longitude(match.getLongitude())
-            .maxPlayers(match.getMaxPlayers())
-            .currentPlayers(match.getCurrentPlayers())
-            .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
-            .entryFee(match.getEntryFee())
-            .status(MatchStatus.OPEN)
-            .build();
+                .matchId(match.getId())
+                .title(match.getTitle())
+                .sportType(match.getSportType().name())
+                .matchDate(match.getMatchDate())
+                .locationName(match.getLocationName())
+                .latitude(match.getLatitude())
+                .longitude(match.getLongitude())
+                .maxPlayers(match.getMaxPlayers())
+                .currentPlayers(match.getCurrentPlayers())
+                .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
+                .entryFee(match.getEntryFee())
+                .status(MatchStatus.OPEN)
+                .build();
     }
 
-    // 경기 정보 수정
+    @Transactional
     public MatchUpdateResponse updateMatch(Long matchId, MatchUpdateRequest request) {
+        Match match = findActiveMatchOrThrow(matchId);
 
-        // 수정 실행
-        matchMapper.updateMatch(
-                matchId,
-                request.getTitle(),
-                request.getMatchDate(),
-                request.getMaxPlayers(),
-                request.getEntryFee(),
-                request.getDescription()
-        );
+        if (request.getTitle() != null) match.setTitle(request.getTitle());
+        if (request.getMatchDate() != null) match.setMatchDate(request.getMatchDate());
+        if (request.getMaxPlayers() != null) match.setMaxPlayers(request.getMaxPlayers());
+        if (request.getEntryFee() != null) match.setEntryFee(request.getEntryFee());
+        if (request.getDescription() != null) match.setDescription(request.getDescription());
 
-        // 수정된 매치 조회
-        Match match = matchMapper.findById(matchId);
+        matchRepository.save(match);
 
-        // Response 변환
         return MatchUpdateResponse.builder()
                 .matchId(match.getId())
                 .title(match.getTitle())
@@ -87,37 +76,55 @@ public class MatchService {
                 .currentPlayers(match.getCurrentPlayers())
                 .description(match.getDescription())
                 .entryFee(match.getEntryFee())
-                .status(MatchStatus.OPEN)
+                .status(match.getStatus())
                 .updatedAt(match.getUpdatedAt())
                 .build();
     }
 
-    
-
-    // 랜덤 매칭 요청
-    public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
-
-        return matchMapper.findRandomMatch(request);
-    }
-
+    @Transactional(readOnly = true)
     public MatchResponse getMatch(Long matchId) {
-        Match match = matchMapper.findById(matchId);
-
-        return toResponse(match);
+        return toResponse(findActiveMatchOrThrow(matchId));
     }
 
+    @Transactional(readOnly = true)
     public List<MatchResponse> getMatches(int page, int size) {
-        
-        int offset = page * size;
-
-        List<Match> matches = matchMapper.findAll(offset, size);
-
-        return matches.stream()
-                .map(this::toResponse)
-                .toList();
+        return matchRepository.findByStatusNotOrderByMatchDateDesc(
+                        MatchStatus.DELETED, PageRequest.of(page, size))
+                .stream().map(this::toResponse).toList();
     }
 
-    // 매치 조회 DTO 변환 메소드
+    @Transactional(readOnly = true)
+    public RandomMatchResponse findRandomMatch(RandomMatchRequest request) {
+        String skillLevel = request.getSkillLevel() != null ? String.valueOf(request.getSkillLevel()) : null;
+
+        return matchRepository.findRandomMatch(
+                        request.getLatitude(), request.getLongitude(),
+                        request.getSportType(), request.getDate(),
+                        request.getMaxFee(), skillLevel, request.getRadius())
+                .map(row -> RandomMatchResponse.builder()
+                        .matchId(((Number) row[0]).longValue())
+                        .title((String) row[4])
+                        .sportType((String) row[5])
+                        .matchDate(((java.sql.Timestamp) row[6]).toLocalDateTime())
+                        .locationName((String) row[8])
+                        .entryFee(row[13] != null ? ((Number) row[13]).intValue() : null)
+                        .distance(((Number) row[row.length - 1]).doubleValue())
+                        .build())
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+    }
+
+    @Transactional
+    public void deleteMatch(Long matchId) {
+        Match match = findActiveMatchOrThrow(matchId);
+        match.setStatus(MatchStatus.DELETED);
+        matchRepository.save(match);
+    }
+
+    private Match findActiveMatchOrThrow(Long matchId) {
+        return matchRepository.findByIdAndStatusNot(matchId, MatchStatus.DELETED)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+    }
+
     private MatchResponse toResponse(Match match) {
         return MatchResponse.builder()
                 .matchId(match.getId())
@@ -134,22 +141,5 @@ public class MatchService {
                 .status(match.getStatus())
                 .updatedAt(match.getUpdatedAt())
                 .build();
-    }
-
-    public void deleteMatch(Long matchId) {
-        
-        // 존재 여부 확인
-        Match match = matchMapper.findById(matchId);
-
-        if (match == null) {
-            throw new CustomException(ErrorCode.MATCH_NOT_FOUND);
-        }
-
-        // 이미 삭제된 경우 방지
-        if (match.getStatus() == MatchStatus.DELETED) {
-            throw new CustomException(ErrorCode.MATCH_DELETED);
-        }
-
-        matchMapper.deleteMatch(matchId);
     }
 }

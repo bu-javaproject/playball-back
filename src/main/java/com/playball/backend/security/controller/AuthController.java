@@ -12,9 +12,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "인증", description = "카카오 로그인 / 토큰 재발급 / 로그아웃 API")
@@ -24,6 +26,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    // 카카오가 redirect_uri로 인가코드를 넘겨주는 콜백 (테스트용)
+    @Operation(summary = "카카오 OAuth 콜백", description = "카카오가 redirect_uri로 인가코드를 전달하는 엔드포인트입니다.")
+    @GetMapping("/kakao/callback")
+    public ResponseEntity<ApiResponse<KakaoLoginResponse>> kakaoCallback(
+            @RequestParam("code") String code) {
+
+        String redirectUri = "http://localhost:8080/api/auth/kakao/callback";
+        KakaoLoginResponse response = authService.kakaoLogin(code, redirectUri);
+
+        if (response.isNewUser()) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.ok("추가 정보 입력이 필요합니다", response));
+        }
+        return ResponseEntity.ok(ApiResponse.ok("로그인 성공", response));
+    }
 
     @Operation(summary = "카카오 로그인",
             description = "카카오 인가코드로 로그인합니다. 신규 회원이면 201 + isNewUser:true를 반환합니다.")
