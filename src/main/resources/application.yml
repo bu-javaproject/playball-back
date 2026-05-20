@@ -19,6 +19,13 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    try-it-out-enabled: true
+  api-docs:
+    path: /v3/api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 # 카카오 OAuth URL (API 키는 application-secret.yml에)
 kakao:

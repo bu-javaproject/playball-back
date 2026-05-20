@@ -426,6 +426,8 @@ paths:
                     ageRange: null
                     status: "OPEN"
                     updatedAt: "2026-05-17T10:00:00"
+                    hostId: 1
+                    hostName: "홍길동"
                   - matchId: 3
                     title: "농구 3:3"
                     sportType: "BASKETBALL"
@@ -439,6 +441,8 @@ paths:
                     ageRange: 20
                     status: "CLOSED"
                     updatedAt: "2026-05-15T09:00:00"
+                    hostId: 2
+                    hostName: "김철수"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1658,9 +1662,15 @@ components:
         latitude:
           type: number
           format: double
+          description: "현재 위치 위도"
         longitude:
           type: number
           format: double
+          description: "현재 위치 경도"
+        address:
+          type: string
+          nullable: true
+          description: "현재 주소 (선택)"
         radius:
           type: number
           format: double
@@ -1673,10 +1683,15 @@ components:
           type: string
           format: date
           nullable: true
+          description: "희망 경기 날짜 (생략 시 날짜 무관)"
+        preferredPosition:
+          type: string
+          nullable: true
+          description: "선호 포지션 (선택)"
         maxFee:
           type: integer
           nullable: true
-          description: "최대 참가비"
+          description: "최대 참가비 필터 (이 금액 이하만 조회)"
         skillLevel:
           type: string
           enum: [BEGINNER, INTERMEDIATE, ADVANCED]
@@ -1729,3 +1744,574 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/ComplimentSubmitItem'
+
+    # ── 응답 스키마 ──────────────────────────────────
+
+    ProfileResponse:
+      type: object
+      description: 회원 프로필 응답
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          example: 1
+        nickname:
+          type: string
+          example: "홍길동"
+        gender:
+          type: string
+          enum: [M, F]
+          example: "M"
+        age:
+          type: integer
+          example: 22
+        profileImage:
+          type: string
+          nullable: true
+          example: "https://k.kakaocdn.net/..."
+        address:
+          type: string
+          nullable: true
+          example: "서울시 노원구 신부동"
+        skillLevel:
+          type: string
+          enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+          nullable: true
+          example: "INTERMEDIATE"
+        preferredPosition:
+          type: string
+          nullable: true
+          example: "ST"
+        favoriteSports:
+          type: array
+          items:
+            type: string
+            enum: [SOCCER, BASKETBALL, RUNNING, BADMINTON]
+          example: ["SOCCER", "BASKETBALL"]
+
+    MemberDTO:
+      type: object
+      description: 회원 전체 정보 (회원가입 완료 응답용)
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          example: 1
+        kakaoId:
+          type: integer
+          format: int64
+          example: 3123456789
+        email:
+          type: string
+          nullable: true
+          example: "user@example.com"
+        nickname:
+          type: string
+          example: "홍길동"
+        name:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          enum: [M, F]
+          example: "M"
+        age:
+          type: integer
+          example: 22
+        profileImage:
+          type: string
+          nullable: true
+        skillLevel:
+          type: string
+          enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+          nullable: true
+        preferredPosition:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        role:
+          type: string
+          example: "ROLE_USER"
+        signupCompleted:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        favoriteSports:
+          type: array
+          items:
+            type: string
+            enum: [SOCCER, BASKETBALL, RUNNING, BADMINTON]
+
+    MatchResponse:
+      type: object
+      description: 경기 목록 항목
+      properties:
+        matchId:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: "강남 풋살 같이 하실 분!"
+        sportType:
+          type: string
+          enum: [SOCCER, BASKETBALL, RUNNING, BADMINTON]
+          example: "SOCCER"
+        matchDate:
+          type: string
+          format: date-time
+          example: "2026-06-01T18:00:00"
+        locationName:
+          type: string
+          nullable: true
+          example: "강남 스포츠센터"
+        latitude:
+          type: number
+          format: double
+          example: 37.5665
+        longitude:
+          type: number
+          format: double
+          example: 126.9780
+        maxPlayers:
+          type: integer
+          example: 10
+        currentPlayers:
+          type: integer
+          example: 5
+        gender:
+          type: string
+          enum: [M, F]
+          nullable: true
+        ageRange:
+          type: integer
+          nullable: true
+          example: 20
+        status:
+          type: string
+          enum: [OPEN, CLOSED, COMPLETED, DELETED]
+          example: "OPEN"
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    MyMatchResponse:
+      type: object
+      description: 내가 참가한 경기 항목
+      allOf:
+        - $ref: '#/components/schemas/MatchResponse'
+        - type: object
+          properties:
+            hostId:
+              type: integer
+              format: int64
+              description: "주최자(호스트) 회원 ID"
+              example: 3
+            hostName:
+              type: string
+              description: "주최자(호스트) 닉네임"
+              example: "풋살왕"
+
+    MatchCreateResponse:
+      type: object
+      description: 경기 생성 응답
+      properties:
+        matchId:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: "강남 풋살 같이 하실 분!"
+        sportType:
+          type: string
+          enum: [SOCCER, BASKETBALL, RUNNING, BADMINTON]
+          example: "SOCCER"
+        matchDate:
+          type: string
+          format: date-time
+        locationName:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        address:
+          type: string
+          nullable: true
+        maxPlayers:
+          type: integer
+          example: 10
+        currentPlayers:
+          type: integer
+          example: 1
+          description: "생성 직후 1 (호스트 포함)"
+        gender:
+          type: string
+          enum: [M, F]
+          nullable: true
+        ageRange:
+          type: integer
+          nullable: true
+        skillLevel:
+          type: string
+          enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+          nullable: true
+        entryFee:
+          type: integer
+          example: 0
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [OPEN, CLOSED, COMPLETED, DELETED]
+          example: "OPEN"
+
+    MatchUpdateResponse:
+      type: object
+      description: 경기 수정 응답
+      properties:
+        matchId:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+        matchDate:
+          type: string
+          format: date-time
+        maxPlayers:
+          type: integer
+        currentPlayers:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        entryFee:
+          type: integer
+        status:
+          type: string
+          enum: [OPEN, CLOSED, COMPLETED, DELETED]
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatchDetailResponse:
+      type: object
+      description: 경기 상세 조회 응답
+      properties:
+        match:
+          type: object
+          description: "경기 상세 정보"
+          properties:
+            matchId:
+              type: integer
+              format: int64
+            title:
+              type: string
+            sportType:
+              type: string
+              enum: [SOCCER, BASKETBALL, RUNNING, BADMINTON]
+            matchDate:
+              type: string
+              format: date-time
+            locationName:
+              type: string
+              nullable: true
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+            address:
+              type: string
+              nullable: true
+            maxPlayers:
+              type: integer
+            currentPlayers:
+              type: integer
+            gender:
+              type: string
+              enum: [M, F]
+              nullable: true
+            ageRange:
+              type: integer
+              nullable: true
+            skillLevel:
+              type: string
+              enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+              nullable: true
+            entryFee:
+              type: integer
+            description:
+              type: string
+              nullable: true
+            status:
+              type: string
+              enum: [OPEN, CLOSED, COMPLETED, DELETED]
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+        joinedMembers:
+          type: array
+          description: "APPROVED 상태 참가자 목록"
+          items:
+            type: object
+            properties:
+              memberId:
+                type: integer
+                format: int64
+              nickname:
+                type: string
+              profileImage:
+                type: string
+                nullable: true
+              gender:
+                type: string
+                enum: [M, F]
+                nullable: true
+              age:
+                type: integer
+                nullable: true
+              skillLevel:
+                type: string
+                enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+                nullable: true
+              preferredPosition:
+                type: string
+                nullable: true
+
+    MatchedResponse:
+      type: object
+      description: 경기 참가 결과
+      properties:
+        matchId:
+          type: integer
+          format: int64
+          example: 1
+        currentPlayers:
+          type: integer
+          description: "참가 후 현재 인원"
+          example: 6
+        maxPlayers:
+          type: integer
+          example: 10
+        status:
+          type: string
+          enum: [OPEN, CLOSED]
+          description: "인원이 차면 CLOSED로 변경"
+          example: "OPEN"
+
+    RandomMatchResponse:
+      type: object
+      description: 랜덤 매칭 결과
+      properties:
+        matchId:
+          type: integer
+          format: int64
+          example: 42
+        title:
+          type: string
+          example: "강남 풋살 같이 하실 분!"
+        sportType:
+          type: string
+          enum: [SOCCER, BASKETBALL, RUNNING, BADMINTON]
+          example: "SOCCER"
+        matchDate:
+          type: string
+          format: date-time
+          example: "2026-06-01T18:00:00"
+        locationName:
+          type: string
+          nullable: true
+          example: "강남 스포츠센터"
+        entryFee:
+          type: integer
+          example: 5000
+        currentPlayers:
+          type: integer
+          example: 5
+        maxPlayers:
+          type: integer
+          example: 10
+        distance:
+          type: number
+          format: double
+          description: "현재 위치로부터의 거리 (km)"
+          example: 2.3
+
+    NotificationDTO:
+      type: object
+      description: 알림 항목
+      properties:
+        notificationId:
+          type: integer
+          format: int64
+          example: 145
+        memberId:
+          type: integer
+          format: int64
+          example: 3
+        noticeType:
+          type: string
+          enum: [MATCH_FOUND, APPLICATION_REJECTED, MATCH_REMINDER, MATCH_CANCELLED, RATING_REQUEST, SYSTEM_NOTICE]
+          example: "MATCH_FOUND"
+        title:
+          type: string
+          example: "매칭이 성사되었습니다!"
+        content:
+          type: string
+          example: "강남 풋살 경기에 참가 확정되었습니다."
+        isRead:
+          type: boolean
+          example: false
+        targetType:
+          type: string
+          enum: [MATCH, MEMBER]
+          description: "클릭 시 이동할 화면 (MATCH: 경기 상세, MEMBER: 프로필)"
+          example: "MATCH"
+        targetId:
+          type: integer
+          format: int64
+          description: "이동할 대상 ID (경기 ID 또는 회원 ID)"
+          example: 10
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-01T17:00:00"
+
+    NotificationListResponse:
+      type: object
+      description: 알림 목록 응답 (커서 기반 페이지네이션)
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationDTO'
+        nextCursor:
+          type: integer
+          format: int64
+          nullable: true
+          description: "다음 페이지 커서 (더 이상 없으면 null)"
+          example: 144
+
+    NotificationSettingDTO:
+      type: object
+      description: 알림 설정
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          example: 1
+        enabled:
+          type: boolean
+          description: "알림 수신 활성화 여부"
+          example: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-05-17T18:30:00"
+
+    ComplimentDTO:
+      type: object
+      description: 칭찬 항목
+      properties:
+        complimentId:
+          type: integer
+          format: int64
+          example: 88
+        matchId:
+          type: integer
+          format: int64
+          example: 12
+        raterId:
+          type: integer
+          format: int64
+          description: "칭찬한 회원 ID"
+          example: 3
+        rateeId:
+          type: integer
+          format: int64
+          description: "칭찬받은 회원 ID"
+          example: 1
+        tags:
+          type: array
+          items:
+            type: string
+            enum: [MANNERS, SKILL, PUNCTUAL, PASSIONATE, MOOD_MAKER]
+          example: ["MANNERS", "PUNCTUAL"]
+        comment:
+          type: string
+          nullable: true
+          maxLength: 200
+          example: "오늘 정말 즐거웠습니다"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-05-17T19:30:00"
+
+    ComplimentListResponse:
+      type: object
+      description: 받은 칭찬 목록 응답 (커서 기반 페이지네이션)
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplimentDTO'
+        nextCursor:
+          type: integer
+          format: int64
+          nullable: true
+          description: "다음 페이지 커서 (더 이상 없으면 null)"
+          example: 87
+
+    ComplimentSummaryDTO:
+      type: object
+      description: 회원 칭찬 통계 (프로필용)
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          example: 1
+        totalCount:
+          type: integer
+          description: "받은 칭찬 총 개수"
+          example: 35
+        tagCounts:
+          type: object
+          description: "태그별 칭찬 개수"
+          additionalProperties:
+            type: integer
+          example:
+            MANNERS: 12
+            SKILL: 8
+            PUNCTUAL: 7
+            PASSIONATE: 5
+            MOOD_MAKER: 3
