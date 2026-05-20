@@ -1,6 +1,6 @@
 package com.playball.backend.domain.notification.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,21 +29,21 @@ public class NotificationTriggerServiceImpl implements NotificationTriggerServic
     @Transactional
     public void sendMatchFound(Long memberId, Long matchId, String matchTitle) {
         send(memberId, NoticeType.MATCH_FOUND, "매칭 성사!",
-                matchTitle + "매칭이 성사되었습니다.", NotificationTargetType.MATCH, matchId);
+                matchTitle + " 매칭이 성사되었습니다.", NotificationTargetType.MATCH, matchId);
     }
 
     @Override
     @Transactional
     public void sendApplicationRejected(Long memberId, Long matchId, String matchTitle) {
         send(memberId, NoticeType.APPLICATION_REJECTED, "신청 거절",
-                matchTitle + "신청이 거절되었습니다.", NotificationTargetType.MATCH, matchId);
+                matchTitle + " 신청이 거절되었습니다.", NotificationTargetType.MATCH, matchId);
     }
 
     @Override
     @Transactional
     public void sendMatchReminder(Long memberId, Long matchId, String matchTitle) {
         send(memberId, NoticeType.MATCH_REMINDER, "경기 임박",
-                matchTitle + "경기가 곧 시작됩니다.", NotificationTargetType.MATCH, matchId);
+                matchTitle + " 경기가 곧 시작됩니다.", NotificationTargetType.MATCH, matchId);
     }
 
     @Override

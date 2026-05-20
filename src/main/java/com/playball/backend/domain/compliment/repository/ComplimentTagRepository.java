@@ -9,4 +9,6 @@ import java.util.List;
 public interface ComplimentTagRepository extends JpaRepository<ComplimentTagEntity, Long> {
 
     List<ComplimentTagEntity> findByComplimentId(Long complimentId);
+
+    List<ComplimentTagEntity> findByComplimentIdIn(List<Long> complimentIds);
 }

@@ -1,5 +1,6 @@
 package com.playball.backend.domain.auth.controller;
 
+import com.playball.backend.common.annotation.CurrentMemberId;
 import com.playball.backend.common.dto.ApiResponse;
 import com.playball.backend.domain.auth.dto.KakaoLoginRequest;
 import com.playball.backend.domain.auth.dto.KakaoLoginResponse;
@@ -38,8 +39,7 @@ public class AuthController {
             description = "카카오 인가코드로 로그인합니다. 신규 회원이면 isNewUser:true를 반환합니다.")
     @PostMapping("/kakao")
     public ApiResponse<KakaoLoginResponse> kakaoLogin(@Valid @RequestBody KakaoLoginRequest request) {
-        KakaoLoginResponse response = authService.kakaoLogin(
-                request.getAuthorizationCode());
+        KakaoLoginResponse response = authService.kakaoLogin(request.getAuthorizationCode());
         String message = response.isNewUser() ? "추가 정보 입력이 필요합니다" : "로그인 성공";
         return ApiResponse.ok(message, response);
     }
@@ -53,8 +53,7 @@ public class AuthController {
 
     @Operation(summary = "로그아웃", description = "서버의 Refresh Token을 삭제합니다.")
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(Authentication authentication) {
-        Long memberId = (Long) authentication.getPrincipal();
+    public ApiResponse<Void> logout(@CurrentMemberId Long memberId) {
         authService.logout(memberId);
         return ApiResponse.ok("로그아웃 성공", null);
     }

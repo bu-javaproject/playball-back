@@ -19,7 +19,7 @@ public class RandomMatchResponse {
     private LocalDateTime matchDate;
     private String locationName;
     private Integer entryFee;
-
-
-    private Double distance; // 거리 계산을 위한 변수 추가
+    private Integer currentPlayers;
+    private Integer maxPlayers;
+    private Double distance;
 }

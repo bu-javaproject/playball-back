@@ -21,6 +21,7 @@ public class MatchCreateRequest {
     private String sportType; // 종목
 
     @NotNull
+    @FutureOrPresent
     private LocalDateTime matchDate; // 경기 날짜/시간
 
     private String locationName; // 장소명
@@ -37,10 +38,14 @@ public class MatchCreateRequest {
     @Min(1)
     private Integer maxPlayers; // 최대 인원
 
+    private String gender; // null=무관, "M"=남성, "F"=여성
+
+    private Integer ageRange; // null=무관, 예) 20=20대
+
     private SkillLevel skillLevel;
 
-    @Builder.Default
-    private Integer entryFee = 0; // 참가비 (기본 0)
+    @Min(0)
+    private Integer entryFee; // 참가비 (null이면 서비스에서 0으로 처리)
 
     private String description; // 공지 메시지
 

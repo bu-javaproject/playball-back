@@ -10,6 +10,8 @@ import com.playball.backend.domain.compliment.enums.ComplimentTag;
 import com.playball.backend.domain.compliment.repository.ComplimentRepository;
 import com.playball.backend.domain.compliment.repository.ComplimentTagRepository;
 import com.playball.backend.domain.compliment.repository.MemberComplimentSummaryRepository;
+import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
+import com.playball.backend.domain.matching.entity.ParticipantStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +33,17 @@ public class ComplimentService {
     private final ComplimentRepository complimentRepository;
     private final ComplimentTagRepository complimentTagRepository;
     private final MemberComplimentSummaryRepository summaryRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     @Transactional
     public int submitBulkCompliments(Long raterId, Long matchId, ComplimentBulkRequest request) {
         List<ComplimentSubmitItem> items = request.getCompliments();
+
+        // 칭찬하는 사람이 경기 참가자인지 확인
+        if (!matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
+                matchId, raterId, List.of(ParticipantStatus.APPROVED))) {
+            throw new CustomException(ErrorCode.NOT_A_PARTICIPANT);
+        }
 
         // 같은 batch 안 중복 rateeId 체크
         Set<Long> rateeIds = items.stream()
@@ -45,6 +54,11 @@ public class ComplimentService {
         }
 
         for (ComplimentSubmitItem item : items) {
+            // 칭찬받는 사람이 경기 참가자인지 확인
+            if (!matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
+                    matchId, item.getRateeId(), List.of(ParticipantStatus.APPROVED))) {
+                throw new CustomException(ErrorCode.NOT_A_PARTICIPANT);
+            }
             if (raterId.equals(item.getRateeId())) {
                 throw new CustomException(ErrorCode.SELF_COMPLIMENT);
             }
@@ -85,12 +99,17 @@ public class ComplimentService {
         List<Compliment> compliments = complimentRepository.findReceivedByMemberWithCursor(
                 memberId, cursor, PageRequest.ofSize(size));
 
+        List<Long> ids = compliments.stream().map(Compliment::getComplimentId).toList();
+        Map<Long, List<ComplimentTag>> tagMap = complimentTagRepository.findByComplimentIdIn(ids)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        ComplimentTagEntity::getComplimentId,
+                        Collectors.mapping(ComplimentTagEntity::getTag, Collectors.toList())
+                ));
+
         List<ComplimentDTO> items = compliments.stream()
-                .map(c -> {
-                    List<ComplimentTag> tags = complimentTagRepository.findByComplimentId(c.getComplimentId())
-                            .stream().map(ComplimentTagEntity::getTag).toList();
-                    return toDto(c, tags);
-                }).toList();
+                .map(c -> toDto(c, tagMap.getOrDefault(c.getComplimentId(), List.of())))
+                .toList();
 
         Long nextCursor = items.size() < size
                 ? null
@@ -104,13 +123,26 @@ public class ComplimentService {
 
     @Transactional(readOnly = true)
     public Map<String, List<ComplimentDTO>> getMyMatchCompliments(Long memberId, Long matchId) {
-        List<ComplimentDTO> given = complimentRepository
-                .findByRaterIdAndMatchIdOrderByComplimentIdDesc(memberId, matchId)
-                .stream().map(c -> toDto(c, loadTags(c.getComplimentId()))).toList();
+        List<Compliment> givenList = complimentRepository
+                .findByRaterIdAndMatchIdOrderByComplimentIdDesc(memberId, matchId);
+        List<Compliment> receivedList = complimentRepository
+                .findByRateeIdAndMatchIdOrderByComplimentIdDesc(memberId, matchId);
 
-        List<ComplimentDTO> received = complimentRepository
-                .findByRateeIdAndMatchIdOrderByComplimentIdDesc(memberId, matchId)
-                .stream().map(c -> toDto(c, loadTags(c.getComplimentId()))).toList();
+        List<Long> allIds = new java.util.ArrayList<>();
+        givenList.forEach(c -> allIds.add(c.getComplimentId()));
+        receivedList.forEach(c -> allIds.add(c.getComplimentId()));
+
+        Map<Long, List<ComplimentTag>> tagMap = complimentTagRepository.findByComplimentIdIn(allIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        ComplimentTagEntity::getComplimentId,
+                        Collectors.mapping(ComplimentTagEntity::getTag, Collectors.toList())
+                ));
+
+        List<ComplimentDTO> given = givenList.stream()
+                .map(c -> toDto(c, tagMap.getOrDefault(c.getComplimentId(), List.of()))).toList();
+        List<ComplimentDTO> received = receivedList.stream()
+                .map(c -> toDto(c, tagMap.getOrDefault(c.getComplimentId(), List.of()))).toList();
 
         return Map.of("given", given, "received", received);
     }
@@ -134,11 +166,6 @@ public class ComplimentService {
                 .totalCount(total)
                 .tagCounts(tagCounts)
                 .build();
-    }
-
-    private List<ComplimentTag> loadTags(Long complimentId) {
-        return complimentTagRepository.findByComplimentId(complimentId)
-                .stream().map(ComplimentTagEntity::getTag).toList();
     }
 
     private ComplimentDTO toDto(Compliment c, List<ComplimentTag> tags) {

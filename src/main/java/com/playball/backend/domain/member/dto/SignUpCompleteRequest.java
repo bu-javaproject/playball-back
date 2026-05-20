@@ -32,5 +32,5 @@ public class SignUpCompleteRequest {
     private List<String> favoriteSports;
 
     private String skillLevel;
-    private String preferedPosition;
+    private String preferredPosition;
 }

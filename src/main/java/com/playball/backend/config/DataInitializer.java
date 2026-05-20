@@ -143,8 +143,13 @@ public class DataInitializer implements ApplicationRunner {
             return;
         }
 
+        List<Long> hostIds = memberRepository.findAll().stream()
+                .map(m -> m.getMemberId())
+                .toList();
+
         List<Match> matches = List.of(
                 Match.builder()
+                        .hostId(hostIds.isEmpty() ? null : hostIds.get(0))
                         .title("주말 풋살 같이 하실 분!")
                         .sportType(SportType.SOCCER)
                         .matchDate(LocalDateTime.now().plusDays(3))
@@ -161,6 +166,7 @@ public class DataInitializer implements ApplicationRunner {
                         .build(),
 
                 Match.builder()
+                        .hostId(hostIds.size() > 1 ? hostIds.get(1) : null)
                         .title("3대3 농구 팀원 모집")
                         .sportType(SportType.BASKETBALL)
                         .matchDate(LocalDateTime.now().plusDays(1))
@@ -177,6 +183,7 @@ public class DataInitializer implements ApplicationRunner {
                         .build(),
 
                 Match.builder()
+                        .hostId(hostIds.size() > 2 ? hostIds.get(2) : null)
                         .title("배드민턴 복식 파트너 구해요")
                         .sportType(SportType.BADMINTON)
                         .matchDate(LocalDateTime.now().plusDays(2))
@@ -193,6 +200,7 @@ public class DataInitializer implements ApplicationRunner {
                         .build(),
 
                 Match.builder()
+                        .hostId(hostIds.size() > 3 ? hostIds.get(3) : null)
                         .title("한강 러닝 크루 모집")
                         .sportType(SportType.RUNNING)
                         .matchDate(LocalDateTime.now().plusDays(5))
@@ -209,6 +217,7 @@ public class DataInitializer implements ApplicationRunner {
                         .build(),
 
                 Match.builder()
+                        .hostId(hostIds.size() > 4 ? hostIds.get(4) : null)
                         .title("직장인 풋살 정기 모임")
                         .sportType(SportType.SOCCER)
                         .matchDate(LocalDateTime.now().plusDays(7))

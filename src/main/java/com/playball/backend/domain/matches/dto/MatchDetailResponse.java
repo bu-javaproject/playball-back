@@ -36,6 +36,8 @@ public class MatchDetailResponse {
         private String address;
         private Integer maxPlayers;
         private Integer currentPlayers;
+        private String gender;
+        private Integer ageRange;
         private String skillLevel;
         private Integer entryFee;
         private String description;
@@ -55,6 +57,8 @@ public class MatchDetailResponse {
                     .address(match.getAddress())
                     .maxPlayers(match.getMaxPlayers())
                     .currentPlayers(match.getCurrentPlayers())
+                    .gender(match.getGender())
+                    .ageRange(match.getAgeRange())
                     .skillLevel(match.getSkillLevel() != null ? match.getSkillLevel().name() : null)
                     .entryFee(match.getEntryFee())
                     .description(match.getDescription())
@@ -72,6 +76,7 @@ public class MatchDetailResponse {
     public static class MemberInfo {
         private Long memberId;
         private String nickname;
+        private String profileImage;
         private String gender;
         private Integer age;
         private String skillLevel;
@@ -81,6 +86,7 @@ public class MatchDetailResponse {
             return MemberInfo.builder()
                     .memberId(member.getMemberId())
                     .nickname(member.getNickname())
+                    .profileImage(member.getProfileImage())
                     .gender(member.getGender())
                     .age(member.getAge())
                     .skillLevel(member.getSkillLevel())

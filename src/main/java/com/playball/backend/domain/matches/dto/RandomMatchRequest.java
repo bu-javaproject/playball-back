@@ -2,8 +2,6 @@ package com.playball.backend.domain.matches.dto;
 
 import java.time.LocalDate;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -36,9 +34,7 @@ public class RandomMatchRequest {
 
     private Integer ageRange;
 
-    @Min(1)
-    @Max(5)
-    private Integer skillLevel;
+    private String skillLevel;
 
     private Integer maxFee;
 

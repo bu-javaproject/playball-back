@@ -86,16 +86,8 @@ public class Member {
         this.signupCompleted = true;
     }
 
-    public void updateProfile(String nickname, String name, String phone, Integer age,
-                              String profileImage, String skillLevel, String preferredPosition,
-                              String address, Double latitude, Double longitude) {
-        if (nickname != null) this.nickname = nickname;
-        if (name != null) this.name = name;
-        if (phone != null) this.phone = phone;
-        if (age != null) this.age = age;
-        if (profileImage != null) this.profileImage = profileImage;
-        if (skillLevel != null) this.skillLevel = skillLevel;
-        if (preferredPosition != null) this.preferredPosition = preferredPosition;
+    public void updateProfile(String nickname, String address, Double latitude, Double longitude) {
+        if (nickname != null && !nickname.isBlank()) this.nickname = nickname;
         if (address != null) this.address = address;
         if (latitude != null) this.latitude = latitude;
         if (longitude != null) this.longitude = longitude;

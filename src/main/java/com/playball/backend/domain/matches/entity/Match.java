@@ -6,6 +6,24 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import com.playball.backend.domain.matches.dto.MatchCreateRequest;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 @Entity
 @Table(name = "matches")
 @Getter
@@ -17,6 +35,11 @@ public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
+
+    private Long hostId;
 
     private String title;
 
@@ -35,6 +58,10 @@ public class Match {
     private Integer maxPlayers;
 
     private Integer currentPlayers;
+
+    private String gender; // null=무관, "M"=남성, "F"=여성
+
+    private Integer ageRange; // null=무관, 예) 20=20대
 
     @Enumerated(EnumType.STRING)
     private MatchCreateRequest.SkillLevel skillLevel;

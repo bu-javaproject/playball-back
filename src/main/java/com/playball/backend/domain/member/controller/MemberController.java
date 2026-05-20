@@ -1,18 +1,24 @@
 package com.playball.backend.domain.member.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import com.playball.backend.common.annotation.CurrentMemberId;
 import com.playball.backend.common.dto.ApiResponse;
+import com.playball.backend.domain.matches.dto.MatchResponse;
+import com.playball.backend.domain.matches.service.MatchService;
+import com.playball.backend.domain.member.dto.LocationUpdateRequest;
 import com.playball.backend.domain.member.dto.MemberDTO;
+import com.playball.backend.domain.member.dto.ProfileResponse;
 import com.playball.backend.domain.member.dto.SignUpCompleteRequest;
+import com.playball.backend.domain.member.dto.UpdateProfileRequest;
 import com.playball.backend.domain.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Tag(name = "회원", description = "회원가입 추가정보 / 프로필 조회·수정 / 탈퇴 API")
 @RestController
@@ -21,13 +27,13 @@ import java.util.Map;
 public class MemberController {
 
     private final MemberService memberService;
+    private final MatchService matchService;
 
     @Operation(summary = "회원가입 추가정보 입력")
     @PostMapping("/signup/complete")
     public ApiResponse<MemberDTO> completeSignup(
-            Authentication authentication,
+            @CurrentMemberId Long memberId,
             @Valid @RequestBody SignUpCompleteRequest request) {
-        Long memberId = (Long) authentication.getPrincipal();
         return ApiResponse.ok("회원가입이 완료되었습니다", memberService.completeSignup(memberId, request));
     }
 
@@ -41,43 +47,42 @@ public class MemberController {
 
     @Operation(summary = "내 프로필 조회")
     @GetMapping("/me")
-    public ApiResponse<MemberDTO> getMyProfile(Authentication authentication) {
-        Long memberId = (Long) authentication.getPrincipal();
-        return ApiResponse.ok(memberService.getMyProfile(memberId));
+    public ApiResponse<ProfileResponse> getMyProfile(@CurrentMemberId Long memberId) {
+        return ApiResponse.ok("프로필 조회 성공", memberService.getMyProfile(memberId));
+    }
+
+    @Operation(summary = "내가 참가한 경기 목록 조회")
+    @GetMapping("/me/matches")
+    public ApiResponse<List<MatchResponse>> getMyMatches(@CurrentMemberId Long memberId) {
+        return ApiResponse.ok("내 경기 목록 조회 성공", matchService.getMyMatches(memberId));
     }
 
     @Operation(summary = "다른 회원 프로필 조회")
     @GetMapping("/{memberId}")
-    public ApiResponse<MemberDTO> getMember(@PathVariable Long memberId) {
-        return ApiResponse.ok(memberService.getMemberById(memberId));
+    public ApiResponse<ProfileResponse> getMember(@PathVariable Long memberId) {
+        return ApiResponse.ok("회원 조회 성공", memberService.getMemberById(memberId));
     }
 
-    @Operation(summary = "프로필 수정")
-    @PutMapping("/me/edit")
-    public ApiResponse<MemberDTO> updateProfile(
-            Authentication authentication,
-            @RequestBody MemberDTO updateRequest) {
-        Long memberId = (Long) authentication.getPrincipal();
-        return ApiResponse.ok("프로필이 수정되었습니다", memberService.updateProfile(memberId, updateRequest));
+    @Operation(summary = "프로필 수정 (닉네임·활동지역·선호운동)")
+    @PatchMapping("/me")
+    public ApiResponse<ProfileResponse> updateProfile(
+            @CurrentMemberId Long memberId,
+            @Valid @RequestBody UpdateProfileRequest request) {
+        return ApiResponse.ok("프로필이 수정되었습니다", memberService.updateProfile(memberId, request));
     }
 
     @Operation(summary = "위치 정보 업데이트")
     @PatchMapping("/me/location")
     public ApiResponse<Void> updateLocation(
-            Authentication authentication,
-            @RequestBody Map<String, Object> locationData) {
-        Long memberId = (Long) authentication.getPrincipal();
-        Double latitude = Double.valueOf(locationData.get("latitude").toString());
-        Double longitude = Double.valueOf(locationData.get("longitude").toString());
-        String address = (String) locationData.get("address");
-        memberService.updateLocation(memberId, latitude, longitude, address);
+            @CurrentMemberId Long memberId,
+            @Valid @RequestBody LocationUpdateRequest request) {
+        memberService.updateLocation(memberId, request.getLatitude(), request.getLongitude(), request.getAddress());
         return ApiResponse.ok("위치가 업데이트되었습니다", null);
     }
 
     @Operation(summary = "회원 탈퇴")
     @DeleteMapping("/withdraw")
-    public ApiResponse<Void> withdraw(Authentication authentication) {
-        Long memberId = (Long) authentication.getPrincipal();
+    public ApiResponse<Void> withdraw(@CurrentMemberId Long memberId) {
         memberService.deleteMember(memberId);
         return ApiResponse.ok("회원 탈퇴가 완료되었습니다", null);
     }
