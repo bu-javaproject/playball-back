@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.playball.backend.common.annotation.CurrentMemberId;
 import com.playball.backend.common.dto.ApiResponse;
-import com.playball.backend.domain.matches.dto.MatchResponse;
+import com.playball.backend.domain.matches.dto.MyMatchResponse;
 import com.playball.backend.domain.matches.service.MatchService;
 import com.playball.backend.domain.member.dto.LocationUpdateRequest;
 import com.playball.backend.domain.member.dto.MemberDTO;
@@ -53,7 +53,7 @@ public class MemberController {
 
     @Operation(summary = "내가 참가한 경기 목록 조회")
     @GetMapping("/me/matches")
-    public ApiResponse<List<MatchResponse>> getMyMatches(@CurrentMemberId Long memberId) {
+    public ApiResponse<List<MyMatchResponse>> getMyMatches(@CurrentMemberId Long memberId) {
         return ApiResponse.ok("내 경기 목록 조회 성공", matchService.getMyMatches(memberId));
     }
 

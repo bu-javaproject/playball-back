@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MatchResponse {
+public class MyMatchResponse {
 
     private Long matchId;         // 경기 고유 ID
     private String title;          // 경기 제목
@@ -33,4 +33,7 @@ public class MatchResponse {
     private MatchStatus status;    // 경기 상태 (OPEN, CLOSED, DELETED 등)
 
     private LocalDateTime updatedAt; // 최종 수정 일시
+
+    private Long hostId;           // 주최자 멤버 ID
+    private String hostName;       // 주최자 닉네임
 }

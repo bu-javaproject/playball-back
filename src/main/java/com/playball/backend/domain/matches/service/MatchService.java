@@ -12,6 +12,7 @@ import com.playball.backend.domain.matches.dto.MatchCreateRequest;
 import com.playball.backend.domain.matches.dto.MatchCreateResponse;
 import com.playball.backend.domain.matches.dto.MatchDetailResponse;
 import com.playball.backend.domain.matches.dto.MatchResponse;
+import com.playball.backend.domain.matches.dto.MyMatchResponse;
 import com.playball.backend.domain.matches.dto.MatchUpdateRequest;
 import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
 import com.playball.backend.domain.matches.dto.NearbyMatchView;
@@ -171,11 +172,11 @@ public class MatchService {
                 .build();
     }
 
-    public List<MatchResponse> getMyMatches(Long memberId) {
+    public List<MyMatchResponse> getMyMatches(Long memberId) {
         return matchParticipantRepository
                 .findMyMatches(memberId, ParticipantStatus.APPROVED)
                 .stream()
-                .map(mp -> toResponse(mp.getMatch()))
+                .map(mp -> toMyResponse(mp.getMatch()))
                 .toList();
     }
 
@@ -225,6 +226,31 @@ public class MatchService {
                 .maxPlayers(view.getMaxPlayers())
                 .currentPlayers(view.getCurrentPlayers())
                 .status(MatchStatus.valueOf(view.getStatus()))
+                .build();
+    }
+
+    private MyMatchResponse toMyResponse(Match match) {
+        String hostName = match.getHostId() != null
+                ? memberRepository.findById(match.getHostId())
+                        .map(Member::getNickname)
+                        .orElse(null)
+                : null;
+        return MyMatchResponse.builder()
+                .matchId(match.getId())
+                .title(match.getTitle())
+                .sportType(match.getSportType() != null ? match.getSportType().name() : null)
+                .matchDate(match.getMatchDate())
+                .locationName(match.getLocationName())
+                .latitude(match.getLatitude())
+                .longitude(match.getLongitude())
+                .maxPlayers(match.getMaxPlayers())
+                .currentPlayers(match.getCurrentPlayers())
+                .gender(match.getGender())
+                .ageRange(match.getAgeRange())
+                .status(match.getStatus())
+                .updatedAt(match.getUpdatedAt())
+                .hostId(match.getHostId())
+                .hostName(hostName)
                 .build();
     }
 
