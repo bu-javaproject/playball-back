@@ -10,10 +10,13 @@ package com.playball.backend.domain.notification.service;
 
 public interface NotificationTriggerService {
 
-    /** 매칭 성사 시 호출 */
-    void sendMatchFound(Long memberId, Long matchId, String matchTitle);
+    /** 참가 신청 수신 - 주최자에게 */
+    void sendApplicationReceived(Long hostId, Long matchId, String matchTitle, Long applicantMemberId);
 
-    /** 신청 거절 시 호출 */
+    /** 참가 신청 수락 - 참가자에게 */
+    void sendApplicationAccepted(Long memberId, Long matchId, String matchTitle);
+
+    /** 참가 신청 거절 - 참가자에게 */
     void sendApplicationRejected(Long memberId, Long matchId, String matchTitle);
 
     /** 경기 시작 임박 알림 */

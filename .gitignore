@@ -54,4 +54,4 @@ application-secret.yml
 ### Claude Code ###
 .claude/
 
-src/main/resources/application-secret.yml
+src/main/resources/application-secret.ymlsrc/main/resources/firebase-service-account.json
