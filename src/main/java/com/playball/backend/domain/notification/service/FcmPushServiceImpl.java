@@ -1,18 +1,21 @@
 package com.playball.backend.domain.notification.service;
 
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@Primary   // ← Mock 대신 이 구현체를 우선 사용
+@Primary
+@ConditionalOnBean(FirebaseApp.class)
 @RequiredArgsConstructor
 public class FcmPushServiceImpl implements FcmPushService {
 
