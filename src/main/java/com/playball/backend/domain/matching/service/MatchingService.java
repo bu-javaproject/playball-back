@@ -1,7 +1,5 @@
 package com.playball.backend.domain.matching.service;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,10 +49,8 @@ public class MatchingService {
             throw new CustomException(ErrorCode.MATCH_FULL);
         }
 
-        // PENDING 또는 APPROVED 상태로 이미 참가 신청한 경우 중복 참가 방지
-        boolean alreadyJoined = matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
-                matchId, userId, List.of(ParticipantStatus.PENDING, ParticipantStatus.APPROVED));
-        if (alreadyJoined) {
+        // 상태와 무관하게 이미 참가 신청 이력이 있는 경우 중복 참가 방지
+        if (matchParticipantRepository.findByMatch_IdAndMember_MemberId(matchId, userId).isPresent()) {
             throw new CustomException(ErrorCode.ALREADY_JOINED);
         }
 
