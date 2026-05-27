@@ -4,6 +4,7 @@ import com.playball.backend.domain.matches.dto.NearbyMatchView;
 import com.playball.backend.domain.matches.dto.RandomMatchView;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
+import com.playball.backend.domain.matching.entity.MatchParticipant;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,5 +1,6 @@
 package com.playball.backend.domain.notification.service;
 
+import com.playball.backend.domain.member.repository.MemberRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationTriggerServiceImpl implements NotificationTriggerService {
 
+    private final MemberRepository memberRepository;
     private final NotificationRepository notificationRepository;
     private final NotificationSettingRepository notificationSettingRepository;
     private final DeviceTokenRepository deviceTokenRepository;
@@ -27,16 +29,29 @@ public class NotificationTriggerServiceImpl implements NotificationTriggerServic
 
     @Override
     @Transactional
-    public void sendMatchFound(Long memberId, Long matchId, String matchTitle) {
-        send(memberId, NoticeType.MATCH_FOUND, "매칭 성사!",
-                matchTitle + " 매칭이 성사되었습니다.", NotificationTargetType.MATCH, matchId);
+    public void sendApplicationReceived(Long hostId, Long matchId, String matchTitle, Long applicantMemberId) {
+        String nickname = memberRepository.findById(applicantMemberId)
+                        .map(m -> m.getNickname())
+                        .orElse("알 수 없음");
+        send(hostId, NoticeType.APPLICATION_RECEIVED, "참가 신청이 도착했습니다.",
+                applicantMemberId + "님이 '" + matchTitle + "'에 참가 신청했습니다.",
+                NotificationTargetType.MATCH, matchId);
+    }
+
+    @Override
+    @Transactional
+    public void sendApplicationAccepted(Long memberId, Long matchId, String matchTitle) {
+        send(memberId, NoticeType.APPLICATION_ACCEPTED, "참가 신청 수락",
+                 "'" + matchTitle + "'에 참가 신청이 수락되었습니다.",
+                NotificationTargetType.MATCH, matchId);
     }
 
     @Override
     @Transactional
     public void sendApplicationRejected(Long memberId, Long matchId, String matchTitle) {
-        send(memberId, NoticeType.APPLICATION_REJECTED, "신청 거절",
-                matchTitle + " 신청이 거절되었습니다.", NotificationTargetType.MATCH, matchId);
+        send(memberId, NoticeType.APPLICATION_REJECTED, "참가 신청 거절",
+                "'" + matchTitle + " '에 참가 신청이 거절되었습니다.",
+                NotificationTargetType.MATCH, matchId);
     }
 
     @Override
@@ -92,4 +107,6 @@ public class NotificationTriggerServiceImpl implements NotificationTriggerServic
             fcmPushService.sendPush(deviceToken.getToken(), title, content);
         }
     }
+
+
 }

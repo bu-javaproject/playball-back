@@ -38,7 +38,12 @@ public enum ErrorCode {
 
     // 칭찬
     SELF_COMPLIMENT(HttpStatus.BAD_REQUEST, "자기 자신은 칭찬할 수 없습니다."),
-    DUPLICATE_COMPLIMENT(HttpStatus.CONFLICT, "이미 칭찬한 참가자가 포함되어 있습니다.");
+    DUPLICATE_COMPLIMENT(HttpStatus.CONFLICT, "이미 칭찬한 참가자가 포함되어 있습니다."),
+
+    // 알림
+    APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 신청입니다."),
+    ALREADY_APPLIED(HttpStatus.CONFLICT, "이미 신청한 경기입니다."),
+    APPLICATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 신청입니다.");
 
     private final HttpStatus status;
     private final String message;
