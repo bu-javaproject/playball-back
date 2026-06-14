@@ -19,7 +19,10 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
 
+    @Column(unique = true)
     private Long kakaoId;
+
+    private String kakaoAccessToken;
 
     @Column(unique = true)
     private String email;
@@ -97,5 +100,9 @@ public class Member {
         this.latitude = latitude;
         this.longitude = longitude;
         this.address = address;
+    }
+
+    public void updateKakaoAccessToken(String token) {
+        this.kakaoAccessToken = token;
     }
 }

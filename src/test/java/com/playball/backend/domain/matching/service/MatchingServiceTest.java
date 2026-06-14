@@ -3,6 +3,7 @@ package com.playball.backend.domain.matching.service;
 import com.playball.backend.common.exception.CustomException;
 import com.playball.backend.common.exception.ErrorCode;
 import com.playball.backend.domain.matching.dto.MatchedResponse;
+import com.playball.backend.domain.matching.entity.MatchParticipant;
 import com.playball.backend.domain.matching.entity.ParticipantStatus;
 import com.playball.backend.domain.matching.repository.MatchingRepository;
 import com.playball.backend.domain.matches.entity.Match;
@@ -19,13 +20,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,8 +52,8 @@ class MatchingServiceTest {
         Member member = memberOf(MEMBER_ID);
 
         given(matchRepository.findById(MATCH_ID)).willReturn(Optional.of(match));
-        given(matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
-                eq(MATCH_ID), eq(MEMBER_ID), anyList())).willReturn(false);
+        given(matchParticipantRepository.findByMatch_IdAndMember_MemberId(MATCH_ID, MEMBER_ID))
+                .willReturn(Optional.empty());
         given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
 
         MatchedResponse response = matchingService.joinMatch(MATCH_ID, MEMBER_ID);
@@ -71,8 +72,8 @@ class MatchingServiceTest {
         Member member = memberOf(MEMBER_ID);
 
         given(matchRepository.findById(MATCH_ID)).willReturn(Optional.of(match));
-        given(matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
-                eq(MATCH_ID), eq(MEMBER_ID), anyList())).willReturn(false);
+        given(matchParticipantRepository.findByMatch_IdAndMember_MemberId(MATCH_ID, MEMBER_ID))
+                .willReturn(Optional.empty());
         given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
 
         MatchedResponse response = matchingService.joinMatch(MATCH_ID, MEMBER_ID);
@@ -100,9 +101,8 @@ class MatchingServiceTest {
         Match match = matchOf(3, 10, MatchStatus.OPEN);
 
         given(matchRepository.findById(MATCH_ID)).willReturn(Optional.of(match));
-        given(matchParticipantRepository.existsByMatch_IdAndMember_MemberIdAndStatusIn(
-                eq(MATCH_ID), eq(MEMBER_ID),
-                eq(List.of(ParticipantStatus.PENDING, ParticipantStatus.APPROVED)))).willReturn(true);
+        given(matchParticipantRepository.findByMatch_IdAndMember_MemberId(MATCH_ID, MEMBER_ID))
+                .willReturn(Optional.of(mock(MatchParticipant.class)));
 
         assertThatThrownBy(() -> matchingService.joinMatch(MATCH_ID, MEMBER_ID))
                 .isInstanceOf(CustomException.class)

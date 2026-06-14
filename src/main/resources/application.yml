@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev, secret    # dev + secret 프로필을 동시에 활성화
+    active: secret, dev    # secret 먼저 로드 → dev가 나중에 로드되어 H2 datasource 설정이 우선됨
   jpa:
     hibernate:
       ddl-auto: update
