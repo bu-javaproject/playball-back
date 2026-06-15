@@ -1,6 +1,7 @@
 package com.playball.backend.domain.matches.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import com.playball.backend.domain.matches.dto.MatchUpdateResponse;
 import com.playball.backend.domain.matches.dto.NearbyMatchView;
 import com.playball.backend.domain.matches.dto.RandomMatchRequest;
 import com.playball.backend.domain.matches.dto.RandomMatchResponse;
+import com.playball.backend.domain.matches.dto.RandomMatchView;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
@@ -132,18 +134,20 @@ public class MatchService {
 
     public RandomMatchResponse findRandomMatch(RandomMatchRequest request, Long memberId) {
         String gender = request.getGender() != null ? request.getGender().name() : null;
-        return matchingRepository.findRandomMatch(
-                request.getLatitude(),
-                request.getLongitude(),
-                request.getRadius(),
-                request.getSportType(),
-                request.getDate(),
-                request.getMaxFee(),
-                request.getSkillLevel(),
-                gender,
-                request.getAgeRange(),
-                memberId
-        ).map(view -> RandomMatchResponse.builder()
+
+        Optional<RandomMatchView> result = matchingRepository.findRandomMatch(
+                request.getLatitude(), request.getLongitude(), request.getRadius(),
+                request.getSportType(), request.getDate(), request.getMaxFee(),
+                request.getSkillLevel(), gender, request.getAgeRange(), memberId);
+
+        // 조건 매칭 실패 시 종목만 맞는 경기로 반경 무제한 재시도
+        if (result.isEmpty()) {
+            result = matchingRepository.findRandomMatch(
+                    request.getLatitude(), request.getLongitude(), Double.MAX_VALUE,
+                    request.getSportType(), null, null, null, null, null, memberId);
+        }
+
+        return result.map(view -> RandomMatchResponse.builder()
                 .matchId(view.getMatchId())
                 .title(view.getTitle())
                 .sportType(view.getSportType())

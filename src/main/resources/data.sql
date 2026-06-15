@@ -1,0 +1,1 @@
+-- 더미 데이터는 DataInitializer.java 에서 관리합니다

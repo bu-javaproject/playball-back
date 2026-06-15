@@ -42,7 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
                         .permitAll()
                         //인증 API (카카오 로그인, 토큰 재발급)
-                        .requestMatchers("/api/auth/kakao", "/api/auth/refresh", "/api/auth/kakao/callback")
+                        .requestMatchers("/api/auth/kakao", "/api/auth/refresh", "/api/auth/kakao/callback", "/api/auth/dev-login")
                         .permitAll()
                         //닉네임 중복 확인 (비로그인도 가능)
                         .requestMatchers("/api/members/check-nickname")
@@ -58,9 +58,15 @@ public class SecurityConfig {
                         //정적 리소스 (테스트 HTML 등)
                         .requestMatchers("/*.html", "/static/**")
                         .permitAll()
+                        //H2 콘솔 (개발용)
+                        .requestMatchers("/h2-console/**")
+                        .permitAll()
                         //나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
+
+                //H2 콘솔 iframe 허용
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
 
                 //4.JWT 필터 등록
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

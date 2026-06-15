@@ -1,13 +1,15 @@
 package com.playball.backend.config;
 
+import com.playball.backend.domain.matching.entity.MatchParticipant;
+import com.playball.backend.domain.matching.entity.ParticipantStatus;
+import com.playball.backend.domain.matching.repository.MatchingRepository;
 import com.playball.backend.domain.matches.dto.MatchCreateRequest.SkillLevel;
 import com.playball.backend.domain.matches.entity.Match;
 import com.playball.backend.domain.matches.entity.MatchStatus;
 import com.playball.backend.domain.matches.entity.SportType;
-import com.playball.backend.domain.matching.repository.MatchingRepository;
+import com.playball.backend.domain.matches.repository.MatchParticipantRepository;
 import com.playball.backend.domain.member.entity.Member;
 import com.playball.backend.domain.member.repository.MemberRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -27,214 +29,89 @@ public class DataInitializer implements ApplicationRunner {
 
     private final MemberRepository memberRepository;
     private final MatchingRepository matchingRepository;
+    private final MatchParticipantRepository matchParticipantRepository;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        initMembers();
-        initMatches();
-    }
-
-    private void initMembers() {
         if (memberRepository.count() > 0) {
-            log.info("이미 회원 데이터가 존재합니다. 회원 초기화를 건너뜁니다.");
+            log.info("더미 데이터가 이미 존재합니다. 초기화를 건너뜁니다.");
             return;
         }
 
-        List<Member> members = List.of(
-                Member.builder()
-                        .kakaoId(1001L)
-                        .email("test1@playball.com")
-                        .nickname("축구왕철수")
-                        .name("김철수")
-                        .phone("010-1234-5678")
-                        .gender("M")
-                        .age(28)
-                        .skillLevel("INTERMEDIATE")
-                        .preferredPosition("FW")
-                        .latitude(37.5563)
-                        .longitude(126.9236)
-                        .address("서울특별시 마포구")
-                        .role("USER")
-                        .signupCompleted(true)
-                        .favoriteSports(List.of("SOCCER", "RUNNING"))
-                        .build(),
+        Member m1 = memberRepository.save(Member.builder()
+                .kakaoId(1001L).email("test1@playball.com").nickname("풋살킹")
+                .name("홍길동").gender("M").age(28).skillLevel("INTERMEDIATE")
+                .preferredPosition("FW").latitude(37.3236).longitude(126.8219)
+                .address("경기도 안산시 단원구").role("USER").signupCompleted(true)
+                .favoriteSports(List.of("SOCCER", "RUNNING")).build());
 
-                Member.builder()
-                        .kakaoId(1002L)
-                        .email("test2@playball.com")
-                        .nickname("농구소녀영희")
-                        .name("이영희")
-                        .phone("010-2345-6789")
-                        .gender("F")
-                        .age(25)
-                        .skillLevel("BEGINNER")
-                        .preferredPosition("PG")
-                        .latitude(37.5281)
-                        .longitude(126.9344)
-                        .address("서울특별시 영등포구")
-                        .role("USER")
-                        .signupCompleted(true)
-                        .favoriteSports(List.of("BASKETBALL"))
-                        .build(),
+        Member m2 = memberRepository.save(Member.builder()
+                .kakaoId(1002L).email("test2@playball.com").nickname("농구천재")
+                .name("김철수").gender("M").age(32).skillLevel("ADVANCED")
+                .preferredPosition("C").latitude(37.3236).longitude(126.8219)
+                .address("경기도 안산시 단원구").role("USER").signupCompleted(true)
+                .favoriteSports(List.of("BASKETBALL")).build());
 
-                Member.builder()
-                        .kakaoId(1003L)
-                        .email("test3@playball.com")
-                        .nickname("배드민턴고수민준")
-                        .name("박민준")
-                        .phone("010-3456-7890")
-                        .gender("M")
-                        .age(32)
-                        .skillLevel("ADVANCED")
-                        .preferredPosition(null)
-                        .latitude(37.5145)
-                        .longitude(127.1059)
-                        .address("서울특별시 송파구")
-                        .role("USER")
-                        .signupCompleted(true)
-                        .favoriteSports(List.of("BADMINTON", "SOCCER"))
-                        .build(),
+        Member m3 = memberRepository.save(Member.builder()
+                .kakaoId(1003L).email("test3@playball.com").nickname("배드민턴여왕")
+                .name("이영희").gender("F").age(26).skillLevel("BEGINNER")
+                .preferredPosition(null).latitude(37.3236).longitude(126.8219)
+                .address("경기도 안산시 단원구").role("USER").signupCompleted(true)
+                .favoriteSports(List.of("BADMINTON")).build());
 
-                Member.builder()
-                        .kakaoId(1004L)
-                        .email("test4@playball.com")
-                        .nickname("러닝메이트지수")
-                        .name("최지수")
-                        .phone("010-4567-8901")
-                        .gender("F")
-                        .age(30)
-                        .skillLevel("BEGINNER")
-                        .preferredPosition(null)
-                        .latitude(37.5124)
-                        .longitude(126.9945)
-                        .address("서울특별시 서초구")
-                        .role("USER")
-                        .signupCompleted(true)
-                        .favoriteSports(List.of("RUNNING", "BADMINTON"))
-                        .build(),
+        // 테스트용 자유 참가 계정 — 아무 경기도 개설하지 않아 6개 경기 모두 참가 가능
+        memberRepository.save(Member.builder()
+                .kakaoId(1004L).email("test4@playball.com").nickname("테스터")
+                .name("테스트유저").gender("M").age(25).skillLevel("BEGINNER")
+                .preferredPosition(null).latitude(37.3236).longitude(126.8219)
+                .address("경기도 안산시 단원구").role("USER").signupCompleted(true)
+                .favoriteSports(List.of("SOCCER", "BASKETBALL", "BADMINTON", "RUNNING")).build());
 
-                Member.builder()
-                        .kakaoId(1005L)
-                        .email("test5@playball.com")
-                        .nickname("만능스포츠맨준호")
-                        .name("정준호")
-                        .phone("010-5678-9012")
-                        .gender("M")
-                        .age(27)
-                        .skillLevel("INTERMEDIATE")
-                        .preferredPosition("MF")
-                        .latitude(37.4979)
-                        .longitude(127.0276)
-                        .address("서울특별시 강남구")
-                        .role("USER")
-                        .signupCompleted(true)
-                        .favoriteSports(List.of("SOCCER", "BASKETBALL", "RUNNING"))
-                        .build()
+        log.info("테스트 멤버 저장 완료 — memberId: {}, {}, {}, 4(테스터)", m1.getMemberId(), m2.getMemberId(), m3.getMemberId());
+
+        record MatchSpec(Member host, String title, SportType sport, int daysLater,
+                         String locationName, double lat, double lng, String address,
+                         int max, String gender, Integer ageRange, SkillLevel skill,
+                         int fee, String desc) {}
+
+        List<MatchSpec> specs = List.of(
+            new MatchSpec(m1, "주말 풋살 같이 하실 분!", SportType.SOCCER, 7,
+                "안산 중앙공원 풋살장", 37.3282, 126.8198, "경기도 안산시 단원구 중앙대로 123",
+                10, null, null, SkillLevel.BEGINNER, 0, "초보 환영! 신나게 뛰어봐요"),
+            new MatchSpec(m2, "농구 5:5 팀원 구합니다", SportType.BASKETBALL, 8,
+                "안산 고잔동 농구코트", 37.3193, 126.8257, "경기도 안산시 단원구 고잔동 456",
+                10, "M", 30, SkillLevel.INTERMEDIATE, 5000, "30대 남성 우대, 중급 이상"),
+            new MatchSpec(m3, "아침 러닝 크루 모집", SportType.RUNNING, 11,
+                "안산 화랑유원지", 37.3318, 126.8283, "경기도 안산시 상록구 화랑로 789",
+                20, null, 20, SkillLevel.BEGINNER, 0, "아침 러닝 5km, 페이스 6분대"),
+            new MatchSpec(m1, "배드민턴 복식 파트너 구해요", SportType.BADMINTON, 12,
+                "안산 실내배드민턴장", 37.3160, 126.8165, "경기도 안산시 단원구 선부동 101",
+                4, null, null, SkillLevel.INTERMEDIATE, 3000, "복식 위주, 셔틀콕 제공"),
+            new MatchSpec(m2, "풋살 야간 경기 팀원 모집", SportType.SOCCER, 14,
+                "안산 초지동 풋살파크", 37.3351, 126.8221, "경기도 안산시 단원구 초지동 202",
+                12, "M", null, SkillLevel.ADVANCED, 8000, "야간 조명 완비, 실력자만"),
+            new MatchSpec(m3, "주말 농구 3:3 스트리트볼", SportType.BASKETBALL, 15,
+                "안산 원곡동 야외농구장", 37.3221, 126.8351, "경기도 안산시 단원구 원곡동 303",
+                6, null, null, SkillLevel.BEGINNER, 0, "누구나 환영!")
         );
 
-        memberRepository.saveAll(members);
-        log.info("테스트 회원 데이터 {}건 저장 완료", members.size());
-    }
+        for (MatchSpec s : specs) {
+            Match match = matchingRepository.save(Match.builder()
+                    .hostId(s.host().getMemberId())
+                    .title(s.title()).sportType(s.sport())
+                    .matchDate(LocalDateTime.now().plusDays(s.daysLater()))
+                    .locationName(s.locationName()).latitude(s.lat()).longitude(s.lng())
+                    .address(s.address()).maxPlayers(s.max()).currentPlayers(1)
+                    .gender(s.gender()).ageRange(s.ageRange()).skillLevel(s.skill())
+                    .entryFee(s.fee()).description(s.desc()).status(MatchStatus.OPEN)
+                    .build());
 
-    private void initMatches() {
-        if (matchingRepository.count() > 0) {
-            log.info("이미 경기 데이터가 존재합니다. 경기 초기화를 건너뜁니다.");
-            return;
+            matchParticipantRepository.save(MatchParticipant.builder()
+                    .match(match).member(s.host()).status(ParticipantStatus.APPROVED)
+                    .build());
         }
 
-        List<Long> hostIds = memberRepository.findAll().stream()
-                .map(m -> m.getMemberId())
-                .toList();
-
-        List<Match> matches = List.of(
-                Match.builder()
-                        .hostId(hostIds.isEmpty() ? null : hostIds.get(0))
-                        .title("주말 풋살 같이 하실 분!")
-                        .sportType(SportType.SOCCER)
-                        .matchDate(LocalDateTime.now().plusDays(3))
-                        .locationName("서울 마포구 풋살장")
-                        .latitude(37.5563)
-                        .longitude(126.9236)
-                        .address("서울특별시 마포구 월드컵로 123")
-                        .maxPlayers(10)
-                        .currentPlayers(3)
-                        .skillLevel(SkillLevel.BEGINNER)
-                        .entryFee(5000)
-                        .description("초보 환영! 즐겁게 뛰어요.")
-                        .status(MatchStatus.OPEN)
-                        .build(),
-
-                Match.builder()
-                        .hostId(hostIds.size() > 1 ? hostIds.get(1) : null)
-                        .title("3대3 농구 팀원 모집")
-                        .sportType(SportType.BASKETBALL)
-                        .matchDate(LocalDateTime.now().plusDays(1))
-                        .locationName("한강공원 농구코트")
-                        .latitude(37.5281)
-                        .longitude(126.9344)
-                        .address("서울특별시 영등포구 여의동로 330")
-                        .maxPlayers(6)
-                        .currentPlayers(4)
-                        .skillLevel(SkillLevel.INTERMEDIATE)
-                        .entryFee(0)
-                        .description("3:3 경기, 중급자 이상 환영합니다.")
-                        .status(MatchStatus.OPEN)
-                        .build(),
-
-                Match.builder()
-                        .hostId(hostIds.size() > 2 ? hostIds.get(2) : null)
-                        .title("배드민턴 복식 파트너 구해요")
-                        .sportType(SportType.BADMINTON)
-                        .matchDate(LocalDateTime.now().plusDays(2))
-                        .locationName("송파구 실내 배드민턴장")
-                        .latitude(37.5145)
-                        .longitude(127.1059)
-                        .address("서울특별시 송파구 올림픽로 300")
-                        .maxPlayers(4)
-                        .currentPlayers(2)
-                        .skillLevel(SkillLevel.ADVANCED)
-                        .entryFee(3000)
-                        .description("복식 경기 파트너 구합니다. 고수 환영!")
-                        .status(MatchStatus.OPEN)
-                        .build(),
-
-                Match.builder()
-                        .hostId(hostIds.size() > 3 ? hostIds.get(3) : null)
-                        .title("한강 러닝 크루 모집")
-                        .sportType(SportType.RUNNING)
-                        .matchDate(LocalDateTime.now().plusDays(5))
-                        .locationName("한강 반포지구 출발")
-                        .latitude(37.5124)
-                        .longitude(126.9945)
-                        .address("서울특별시 서초구 반포동 한강공원")
-                        .maxPlayers(8)
-                        .currentPlayers(1)
-                        .skillLevel(SkillLevel.BEGINNER)
-                        .entryFee(0)
-                        .description("5km 코스, 페이스 무관 누구나 환영!")
-                        .status(MatchStatus.OPEN)
-                        .build(),
-
-                Match.builder()
-                        .hostId(hostIds.size() > 4 ? hostIds.get(4) : null)
-                        .title("직장인 풋살 정기 모임")
-                        .sportType(SportType.SOCCER)
-                        .matchDate(LocalDateTime.now().plusDays(7))
-                        .locationName("강남구 풋살 파크")
-                        .latitude(37.4979)
-                        .longitude(127.0276)
-                        .address("서울특별시 강남구 테헤란로 45")
-                        .maxPlayers(12)
-                        .currentPlayers(7)
-                        .skillLevel(SkillLevel.INTERMEDIATE)
-                        .entryFee(8000)
-                        .description("매주 목요일 정기 모임, 직장인 우선!")
-                        .status(MatchStatus.OPEN)
-                        .build()
-        );
-
-        matchingRepository.saveAll(matches);
-        log.info("테스트 경기 데이터 {}건 저장 완료", matches.size());
+        log.info("테스트 경기 6건 저장 완료");
     }
 }

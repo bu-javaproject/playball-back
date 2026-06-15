@@ -94,7 +94,7 @@ class MatchControllerTest {
                 .matchId(MATCH_ID)
                 .title("목동 풋살")
                 .sportType("SOCCER")
-                .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                .matchDate(LocalDateTime.of(2027, 6, 1, 14, 0))
                 .locationName("서울 목동운동장")
                 .latitude(37.5263)
                 .longitude(126.8967)
@@ -110,7 +110,7 @@ class MatchControllerTest {
                 {
                   "title": "목동 풋살",
                   "sportType": "SOCCER",
-                  "matchDate": "2026-06-01T14:00:00",
+                  "matchDate": "2027-06-01T14:00:00",
                   "locationName": "서울 목동운동장",
                   "latitude": 37.5263,
                   "longitude": 126.8967,
@@ -158,7 +158,7 @@ class MatchControllerTest {
         String json = """
                 {
                   "sportType": "SOCCER",
-                  "matchDate": "2026-06-01T14:00:00",
+                  "matchDate": "2027-06-01T14:00:00",
                   "latitude": 37.5263,
                   "longitude": 126.8967,
                   "maxPlayers": 10
@@ -181,7 +181,7 @@ class MatchControllerTest {
                 {
                   "title": "목동 풋살",
                   "sportType": "CRICKET",
-                  "matchDate": "2026-06-01T14:00:00",
+                  "matchDate": "2027-06-01T14:00:00",
                   "latitude": 37.5263,
                   "longitude": 126.8967,
                   "maxPlayers": 10
@@ -208,7 +208,7 @@ class MatchControllerTest {
                         .matchId(MATCH_ID)
                         .title("목동 풋살")
                         .sportType("SOCCER")
-                        .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                        .matchDate(LocalDateTime.of(2027, 6, 1, 14, 0))
                         .locationName("서울 목동운동장")
                         .latitude(37.5263)
                         .longitude(126.8967)
@@ -281,7 +281,7 @@ class MatchControllerTest {
                 .matchId(MATCH_ID)
                 .title("목동 풋살")
                 .sportType("SOCCER")
-                .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                .matchDate(LocalDateTime.of(2027, 6, 1, 14, 0))
                 .locationName("서울 목동운동장")
                 .latitude(37.5263)
                 .longitude(126.8967)
@@ -330,7 +330,7 @@ class MatchControllerTest {
                 .matchId(MATCH_ID)
                 .title("목동 풋살")
                 .sportType("SOCCER")
-                .matchDate(LocalDateTime.of(2026, 6, 1, 14, 0))
+                .matchDate(LocalDateTime.of(2027, 6, 1, 14, 0))
                 .locationName("서울 목동운동장")
                 .entryFee(5000)
                 .currentPlayers(3)

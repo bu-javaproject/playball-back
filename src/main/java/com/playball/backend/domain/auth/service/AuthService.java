@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ public class AuthService {
     @Value("${kakao.redirect-uri}") // yml에서 직접 읽어옴
     private String redirectUri;
 
-    @Transactional
+    @Transactional(noRollbackFor = DataIntegrityViolationException.class)
     public KakaoLoginResponse kakaoLogin(String authorizationCode) {
         String kakaoAccessToken = kakaoOAuthService.getAccessToken(authorizationCode, redirectUri);
         KakaoOAuthService.KakaoUserInfo kakaoUser = kakaoOAuthService.getUserInfo(kakaoAccessToken);
@@ -47,10 +48,18 @@ public class AuthService {
                             .role("USER")
                             .signupCompleted(false)
                             .build();
-                    Member saved = memberRepository.save(newMember);
-                    log.info("신규 회원 임시 등록: kakaoId={}, memberId={}", kakaoUser.kakaoId(), saved.getMemberId());
-                    return saved;
+                    try {
+                        Member saved = memberRepository.saveAndFlush(newMember);
+                        log.info("신규 회원 임시 등록: kakaoId={}, memberId={}", kakaoUser.kakaoId(), saved.getMemberId());
+                        return saved;
+                    } catch (DataIntegrityViolationException e) {
+                        // React StrictMode 등 동시 요청으로 이미 생성된 경우 재조회
+                        return memberRepository.findByKakaoId(kakaoUser.kakaoId())
+                                .orElseThrow(() -> new CustomException(ErrorCode.KAKAO_AUTH_FAILED));
+                    }
                 });
+
+        member.updateKakaoAccessToken(kakaoAccessToken);
 
         boolean isNewUser = !Boolean.TRUE.equals(member.getSignupCompleted());
 
